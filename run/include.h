@@ -3,3 +3,4 @@
 #include <external/imgui/gl.h>
 #include <glgui/view/field.h>
 #include <glgui/view/observer.h>
+#include <slam/environment/field.h>

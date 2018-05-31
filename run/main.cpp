@@ -42,8 +42,23 @@ int main(int, char**)
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-    std::unique_ptr<glgui::view::Field> field = std::make_unique<glgui::view::Field>();
-    std::unique_ptr<glgui::view::Observer> observer = std::make_unique<glgui::view::Observer>();
+    std::unique_ptr<slam::environment::Field> field = std::make_unique<slam::environment::Field>();
+
+    std::vector<glm::vec2> tri;
+    tri.emplace_back(0);
+    tri.emplace_back(0.6, 0);
+    tri.emplace_back(0, 0.5);
+    tri.emplace_back(0.5, 0.5);
+    field->add_wall(tri);
+
+    std::vector<glm::vec2> tri2;
+    tri2.emplace_back(0, 0.5);
+    tri2.emplace_back(0.5, 0.5);
+    tri2.emplace_back(0, 1);
+    field->add_wall(tri2);
+
+    std::unique_ptr<glgui::view::Field> field_view = std::make_unique<glgui::view::Field>(field.get());
+    std::unique_ptr<glgui::view::Observer> observer_view = std::make_unique<glgui::view::Observer>();
 
     while (!glfwWindowShouldClose(window)) {
 
@@ -90,8 +105,8 @@ int main(int, char**)
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        field->render(window, 0, 0, display_h / 2, display_h / 2);
-        observer->render(window, display_h / 2, display_h / 2, display_h / 2, display_h / 2);
+        field_view->render(window, 0, 0, display_h / 2, display_h / 2);
+        observer_view->render(window, display_h / 2, display_h / 2, display_h / 2, display_h / 2);
 
         glViewport(0, 0, display_w, display_h);
         ImGui::Render();
