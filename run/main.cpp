@@ -120,12 +120,8 @@ int main(int, char**)
 
         unsigned int squre_length = screen_width / 3.0;
         field_view->render(window, 0, 0, squre_length, squre_length);
-        observer_view->render(window, squre_length, 0, squre_length, squre_length);
 
-        glViewport(0, 0, screen_width, screen_height);
-        ImGui::Render();
-        ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
-        glfwSwapBuffers(window);
+
 
         // 観測
         double cursor_x, cursor_y;
@@ -138,7 +134,19 @@ int main(int, char**)
         }
         GLfloat angle_rad = 0;
         observer->observe(field.get(), location, angle_rad, num_beams, observed_values);
+        for (int n = 0; n < num_beams; n++) {
+            auto& value = observed_values[n];
+            std::cout << value.x << ", " << value.y << ", " << value.z << ", " << value.w << std::endl;
+        }
+
+        observer_view->render(window, squre_length, 0, squre_length, squre_length, observed_values, num_beams);
         delete[] observed_values;
+
+        glViewport(0, 0, screen_width, screen_height);
+        ImGui::Render();
+        ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
+        glfwSwapBuffers(window);
+
     }
 
     // Cleanup

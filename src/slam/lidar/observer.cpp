@@ -62,6 +62,12 @@ namespace lidar {
                     }
                 }
             }
+            if (isnanf(beam_arrival_point.x)) {
+                beam_arrival_point.x = 0;
+            }
+            if (isnanf(beam_arrival_point.y)) {
+                beam_arrival_point.y = 0;
+            }
             observed_values[beam_index] = {
                 beam_arrival_point.x,
                 beam_arrival_point.y,

@@ -23,7 +23,7 @@ void main(void)
 #version 400
 out vec4 color;
 void main(){
-    color = vec4(1.0, 1.0, 0.0, 1.0);
+    color = vec4(1.0, 1.0, 1.0, 1.0);
 }
 )";
 
@@ -71,7 +71,7 @@ void main(){
 
         // シェーダプログラムの使用開始
         glUseProgram(_program);
-        glViewport(0, window_height - y - height, width, height);
+        glViewport(x, window_height - y - height, width, height);
 
         // 図形の描画
         unsigned int num_walls = _field->_walls.size();
