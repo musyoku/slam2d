@@ -79,6 +79,39 @@ int main(int, char**)
         field->add_wall(wall);
     }
 
+    {
+        std::vector<glm::vec2> wall;
+        wall.emplace_back(-0.2, -0.3);
+        wall.emplace_back(-0.2, -0.3 + wall_thickness);
+        wall.emplace_back(0.3, -0.3);
+        wall.emplace_back(0.3, -0.3 + wall_thickness);
+        field->add_wall(wall);
+    }
+    {
+        std::vector<glm::vec2> wall;
+        wall.emplace_back(-0.4 + wall_thickness, -0.3);
+        wall.emplace_back(-0.4, -0.3);
+        wall.emplace_back(-0.3 + wall_thickness, 0.3);
+        wall.emplace_back(-0.3, 0.3);
+        field->add_wall(wall);
+    }
+    {
+        std::vector<glm::vec2> wall;
+        wall.emplace_back(-0.3, 0.3 - wall_thickness);
+        wall.emplace_back(-0.3, 0.3);
+        wall.emplace_back(0.4, 0.3 - wall_thickness);
+        wall.emplace_back(0.4, 0.3);
+        field->add_wall(wall);
+    }
+    {
+        std::vector<glm::vec2> wall;
+        wall.emplace_back(0.3, -0.3);
+        wall.emplace_back(0.3 - wall_thickness, -0.3);
+        wall.emplace_back(0.3, 0.3);
+        wall.emplace_back(0.3 - wall_thickness, 0.3);
+        field->add_wall(wall);
+    }
+
     std::unique_ptr<glgui::view::Field> field_view = std::make_unique<glgui::view::Field>(field.get());
     std::unique_ptr<glgui::view::Observer> observer_view = std::make_unique<glgui::view::Observer>();
 
@@ -127,7 +160,7 @@ int main(int, char**)
         double cursor_x, cursor_y;
         glfwGetCursorPos(window, &cursor_x, &cursor_y);
         glm::vec2 location = { (static_cast<GLfloat>(cursor_x) / squre_length * 2.0 - 1.0), -(static_cast<GLfloat>(cursor_y) / squre_length * 2.0 - 1.0) };
-        int num_beams = 10;
+        int num_beams = 100;
         glm::vec4* observed_values = new glm::vec4[num_beams];
         for (int n = 0; n < num_beams; n++) {
             observed_values[n] = { 0, 0, 0, 0 };
@@ -139,7 +172,7 @@ int main(int, char**)
             // std::cout << value.x << ", " << value.y << ", " << value.z << ", " << value.w << std::endl;
         }
 
-        observer_view->render(window, squre_length, 0, squre_length, squre_length, location, observed_values, num_beams);
+        observer_view->render(window, 0, 0, squre_length, squre_length, location, observed_values, num_beams);
         delete[] observed_values;
 
         glViewport(0, 0, screen_width, screen_height);
