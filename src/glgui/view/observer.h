@@ -2,9 +2,9 @@
 #include "../core/view.h"
 #include <external/gl3w/gl3w.h>
 #include <external/glfw/glfw3.h>
+#include <external/glm/glm.hpp>
 #include <memory>
 #include <slam/environment/field.h>
-#include <external/glm/glm.hpp>
 
 namespace glgui {
 namespace view {
@@ -16,7 +16,7 @@ namespace view {
         GLuint _vbo;
         Observer();
         ~Observer();
-        virtual void render(GLFWwindow* window, int x, int y, int width, int height, glm::vec4* observed_values, int num_observation);
+        virtual void render(GLFWwindow* window, int x, int y, int width, int height, glm::vec2& location, glm::vec4* observed_values, int num_observation);
     };
 }
 }

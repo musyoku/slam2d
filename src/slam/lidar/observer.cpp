@@ -39,10 +39,11 @@ namespace lidar {
     {
         for (int beam_index = 0; beam_index < num_beams; beam_index++) {
             // まず位置locationから角度angle_radで無限遠にビームを飛ばしたときの到達位置を考える
-            // 実際はフィールドの範囲が[-1, 1]なので無限遠でなくても適当に長さ100にしてもよい
+            // 実際はフィールドの範囲が[-1, 1]なので無限遠でなくても適当に長さ10にしてもよい
             // 時計回りにビームを飛ばすので角度はマイナス
             float beam_angle_rad = -M_PI * 2.0 * beam_index / num_beams;
-            glm::vec2 beam_arrival_point = { cos(beam_angle_rad) * 100, sin(beam_angle_rad) * 100 };
+            cout << beam_angle_rad << endl;
+            glm::vec2 beam_arrival_point = { cos(beam_angle_rad) * 10, sin(beam_angle_rad) * 10 };
             // すべての壁について衝突を計算
             for (auto& wall : field->_walls) {
                 // すべての三角形について
@@ -51,15 +52,15 @@ namespace lidar {
                     glm::vec2& p_a = wall[0 + t];
                     glm::vec2& p_b = wall[1 + t];
                     glm::vec2& p_c = wall[2 + t];
-                    if (is_inside_edge(p_a, p_b, location, beam_arrival_point)) {
-                        beam_arrival_point = compute_new_beam_arrival_point(p_a, p_b, location, beam_arrival_point);
-                    }
-                    if (is_inside_edge(p_b, p_c, location, beam_arrival_point)) {
-                        beam_arrival_point = compute_new_beam_arrival_point(p_b, p_c, location, beam_arrival_point);
-                    }
-                    if (is_inside_edge(p_c, p_a, location, beam_arrival_point)) {
-                        beam_arrival_point = compute_new_beam_arrival_point(p_c, p_a, location, beam_arrival_point);
-                    }
+                    // if (is_inside_edge(p_a, p_b, location, beam_arrival_point)) {
+                    //     beam_arrival_point = compute_new_beam_arrival_point(p_a, p_b, location, beam_arrival_point);
+                    // }
+                    // if (is_inside_edge(p_b, p_c, location, beam_arrival_point)) {
+                    //     beam_arrival_point = compute_new_beam_arrival_point(p_b, p_c, location, beam_arrival_point);
+                    // }
+                    // if (is_inside_edge(p_c, p_a, location, beam_arrival_point)) {
+                    //     beam_arrival_point = compute_new_beam_arrival_point(p_c, p_a, location, beam_arrival_point);
+                    // }
                 }
             }
             if (isnanf(beam_arrival_point.x)) {

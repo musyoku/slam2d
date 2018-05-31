@@ -126,7 +126,7 @@ int main(int, char**)
         // 観測
         double cursor_x, cursor_y;
         glfwGetCursorPos(window, &cursor_x, &cursor_y);
-        glm::vec2 location = { 1.0 - static_cast<GLfloat>(cursor_x) / squre_length, static_cast<GLfloat>(cursor_y) / squre_length };
+        glm::vec2 location = { (static_cast<GLfloat>(cursor_x) / squre_length * 2.0 - 1.0), -(static_cast<GLfloat>(cursor_y) / squre_length * 2.0 - 1.0) };
         int num_beams = 10;
         glm::vec4* observed_values = new glm::vec4[num_beams];
         for (int n = 0; n < num_beams; n++) {
@@ -136,10 +136,10 @@ int main(int, char**)
         observer->observe(field.get(), location, angle_rad, num_beams, observed_values);
         for (int n = 0; n < num_beams; n++) {
             auto& value = observed_values[n];
-            std::cout << value.x << ", " << value.y << ", " << value.z << ", " << value.w << std::endl;
+            // std::cout << value.x << ", " << value.y << ", " << value.z << ", " << value.w << std::endl;
         }
 
-        observer_view->render(window, squre_length, 0, squre_length, squre_length, observed_values, num_beams);
+        observer_view->render(window, squre_length, 0, squre_length, squre_length, location, observed_values, num_beams);
         delete[] observed_values;
 
         glViewport(0, 0, screen_width, screen_height);
