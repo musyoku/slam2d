@@ -43,6 +43,7 @@ int main(int, char**)
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     std::unique_ptr<glgui::view::Field> field = std::make_unique<glgui::view::Field>();
+    std::unique_ptr<glgui::view::Observer> observer = std::make_unique<glgui::view::Observer>();
 
     while (!glfwWindowShouldClose(window)) {
 
@@ -89,7 +90,8 @@ int main(int, char**)
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        field->render(window, 0, 0, 500, 500);
+        field->render(window, 0, 0, display_h / 2, display_h / 2);
+        observer->render(window, display_h / 2, display_h / 2, display_h / 2, display_h / 2);
 
         glViewport(0, 0, display_w, display_h);
         ImGui::Render();

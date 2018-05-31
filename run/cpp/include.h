@@ -2,3 +2,4 @@
 #include <external/imgui/imgui.h>
 #include <external/imgui/gl.h>
 #include <glgui/view/field.h>
+#include <glgui/view/observer.h>

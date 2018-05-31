@@ -73,6 +73,7 @@ namespace opengl {
         // プログラムオブジェクトのリンク
         glLinkProgram(program);
         print_program_info_log(program);
+        glUseProgram(program);
 
         return program;
     }

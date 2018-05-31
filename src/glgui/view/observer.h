@@ -1,11 +1,11 @@
 #pragma once
+#include "../core/view.h"
 #include <external/gl3w/gl3w.h>
 #include <external/glfw/glfw3.h>
-#include "../core/view.h"
 
 namespace glgui {
 namespace view {
-    class Field : public View {
+    class Observer : public View {
     public:
         GLuint _program;
         GLuint _position_location;
@@ -18,8 +18,8 @@ namespace view {
         GLuint _vbo_indices;
         GLuint _texture_id;
         GLuint _sampler_id;
-        Field();
-        ~Field();
+        Observer();
+        ~Observer();
         virtual void render(GLFWwindow* window, int x, int y, int width, int height);
     };
 }

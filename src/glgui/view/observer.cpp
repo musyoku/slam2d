@@ -1,9 +1,9 @@
-#include "field.h"
 #include "../core/opengl.h"
+#include "observer.h"
 
 namespace glgui {
 namespace view {
-    Field::Field()
+    Observer::Observer()
     {
         // バーテックスシェーダのソースプログラム
         const GLchar vertex_shader[] = R"(
@@ -56,7 +56,6 @@ void main(){
 )";
 
         _program = opengl::create_program(vertex_shader, fragment_shader);
-        
 
         // 図形データ
         const GLfloat position[][2] = {
@@ -97,17 +96,17 @@ void main(){
         glBindVertexArray(_vao);
 
         // send vertex array data
-        glEnableVertexAttribArray(_position_location);
         glGenBuffers(1, &_vbo_position);
         glBindBuffer(GL_ARRAY_BUFFER, _vbo_position);
         glBufferData(GL_ARRAY_BUFFER, 32, position, GL_STATIC_DRAW);
         glVertexAttribPointer(_position_location, 2, GL_FLOAT, GL_FALSE, 0, 0);
+        glEnableVertexAttribArray(_position_location);
 
-        glEnableVertexAttribArray(_uv_location);
         glGenBuffers(1, &_vbo_uv);
         glBindBuffer(GL_ARRAY_BUFFER, _vbo_uv);
         glBufferData(GL_ARRAY_BUFFER, 32, uv, GL_STATIC_DRAW);
         glVertexAttribPointer(_uv_location, 2, GL_FLOAT, GL_FALSE, 0, 0);
+        glEnableVertexAttribArray(_uv_location);
 
         // and indices
         glGenBuffers(1, &_vbo_indices);
@@ -150,10 +149,10 @@ void main(){
 
         glBindTexture(GL_TEXTURE_2D, 0);
     }
-    Field::~Field()
+    Observer::~Observer()
     {
     }
-    void Field::render(GLFWwindow* window, int x, int y, int width, int height)
+    void Observer::render(GLFWwindow* window, int x, int y, int width, int height)
     {
         int window_width, window_height;
         glfwGetWindowSize(window, &window_width, &window_height);
