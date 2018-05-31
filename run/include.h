@@ -4,3 +4,4 @@
 #include <glgui/view/field.h>
 #include <glgui/view/observer.h>
 #include <slam/environment/field.h>
+#include <slam/lidar/observer.h>

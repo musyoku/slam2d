@@ -43,6 +43,7 @@ int main(int, char**)
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     std::unique_ptr<slam::environment::Field> field = std::make_unique<slam::environment::Field>();
+    std::unique_ptr<slam::lidar::Ovserver> observer = std::make_unique<slam::lidar::Ovserver>();
 
     float wall_thickness = 0.05;
     {
@@ -110,15 +111,6 @@ int main(int, char**)
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         }
 
-        // 2. Show another simple window. In most cases you will use an explicit Begin/End pair to name your windows.
-        if (show_another_window) {
-            ImGui::Begin("Another Window", &show_another_window);
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-                show_another_window = false;
-            ImGui::End();
-        }
-
         // Rendering
         int screen_width, screen_height;
         glfwGetFramebufferSize(window, &screen_width, &screen_height);
@@ -134,6 +126,19 @@ int main(int, char**)
         ImGui::Render();
         ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
+
+        // 観測
+        double cursor_x, cursor_y;
+        glfwGetCursorPos(window, &cursor_x, &cursor_y);
+        glm::vec2 location = { 1.0 - static_cast<GLfloat>(cursor_x) / squre_length, static_cast<GLfloat>(cursor_y) / squre_length };
+        int num_beams = 10;
+        glm::vec4* observed_values = new glm::vec4[num_beams];
+        for (int n = 0; n < num_beams; n++) {
+            observed_values[n] = { 0, 0, 0, 0 };
+        }
+        GLfloat angle_rad = 0;
+        observer->observe(field.get(), location, angle_rad, num_beams, observed_values);
+        delete[] observed_values;
     }
 
     // Cleanup
