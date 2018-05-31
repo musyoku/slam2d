@@ -160,7 +160,7 @@ int main(int, char**)
         double cursor_x, cursor_y;
         glfwGetCursorPos(window, &cursor_x, &cursor_y);
         glm::vec2 location = { (static_cast<GLfloat>(cursor_x) / squre_length * 2.0 - 1.0), -(static_cast<GLfloat>(cursor_y) / squre_length * 2.0 - 1.0) };
-        int num_beams = 100;
+        int num_beams = 200;
         glm::vec4* observed_values = new glm::vec4[num_beams];
         for (int n = 0; n < num_beams; n++) {
             observed_values[n] = { 0, 0, 0, 0 };
