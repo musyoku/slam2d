@@ -159,7 +159,7 @@ void main(){
 
         // シェーダプログラムの使用開始
         glUseProgram(_program);
-        glViewport(0, window_height - y - height, width, height);
+        glViewport(x, window_height - y - height, width, height);
 
         // 図形の描画
         // glBindVertexArray(vao);
@@ -176,8 +176,8 @@ void main(){
         double cursor_x, cursor_y;
         glfwGetCursorPos(window, &cursor_x, &cursor_y);
         GLfloat location[2];
-        location[0] = 1.0 - static_cast<GLfloat>(cursor_x) / width;
-        location[1] = static_cast<GLfloat>(cursor_y - (window_height - height)) / height;
+        location[0] = 1.0 - static_cast<GLfloat>(cursor_x - x) / width;
+        location[1] = static_cast<GLfloat>(cursor_y - y) / height;
 
         glUniform2fv(_t0_location, 1, location);
 

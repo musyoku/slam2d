@@ -44,18 +44,39 @@ int main(int, char**)
 
     std::unique_ptr<slam::environment::Field> field = std::make_unique<slam::environment::Field>();
 
-    std::vector<glm::vec2> tri;
-    tri.emplace_back(0);
-    tri.emplace_back(0.6, 0);
-    tri.emplace_back(0, 0.5);
-    tri.emplace_back(0.5, 0.5);
-    field->add_wall(tri);
-
-    std::vector<glm::vec2> tri2;
-    tri2.emplace_back(0, 0.5);
-    tri2.emplace_back(0.5, 0.5);
-    tri2.emplace_back(0, 1);
-    field->add_wall(tri2);
+    float wall_thickness = 0.05;
+    {
+        std::vector<glm::vec2> wall;
+        wall.emplace_back(-1, -1);
+        wall.emplace_back(-1, -1 + wall_thickness);
+        wall.emplace_back(1, -1);
+        wall.emplace_back(1, -1 + wall_thickness);
+        field->add_wall(wall);
+    }
+    {
+        std::vector<glm::vec2> wall;
+        wall.emplace_back(-1 + wall_thickness, -1);
+        wall.emplace_back(-1, -1);
+        wall.emplace_back(-1 + wall_thickness, 1);
+        wall.emplace_back(-1, 1);
+        field->add_wall(wall);
+    }
+    {
+        std::vector<glm::vec2> wall;
+        wall.emplace_back(-1, 1 - wall_thickness);
+        wall.emplace_back(-1, 1);
+        wall.emplace_back(1, 1 - wall_thickness);
+        wall.emplace_back(1, 1);
+        field->add_wall(wall);
+    }
+    {
+        std::vector<glm::vec2> wall;
+        wall.emplace_back(1, -1);
+        wall.emplace_back(1 - wall_thickness, -1);
+        wall.emplace_back(1, 1);
+        wall.emplace_back(1 - wall_thickness, 1);
+        field->add_wall(wall);
+    }
 
     std::unique_ptr<glgui::view::Field> field_view = std::make_unique<glgui::view::Field>(field.get());
     std::unique_ptr<glgui::view::Observer> observer_view = std::make_unique<glgui::view::Observer>();
@@ -99,16 +120,17 @@ int main(int, char**)
         }
 
         // Rendering
-        int display_w, display_h;
-        glfwGetFramebufferSize(window, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
+        int screen_width, screen_height;
+        glfwGetFramebufferSize(window, &screen_width, &screen_height);
+        glViewport(0, 0, screen_width, screen_height);
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        field_view->render(window, 0, 0, display_h / 2, display_h / 2);
-        observer_view->render(window, display_h / 2, display_h / 2, display_h / 2, display_h / 2);
+        unsigned int squre_length = screen_width / 3.0;
+        field_view->render(window, 0, 0, squre_length, squre_length);
+        observer_view->render(window, squre_length, 0, squre_length, squre_length);
 
-        glViewport(0, 0, display_w, display_h);
+        glViewport(0, 0, screen_width, screen_height);
         ImGui::Render();
         ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);

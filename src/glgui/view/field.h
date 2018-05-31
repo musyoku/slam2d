@@ -1,7 +1,9 @@
 #pragma once
+#include "../core/view.h"
 #include <external/gl3w/gl3w.h>
 #include <external/glfw/glfw3.h>
-#include "../core/view.h"
+#include <memory>
+#include <slam/environment/field.h>
 
 namespace glgui {
 namespace view {
@@ -9,16 +11,10 @@ namespace view {
     public:
         GLuint _program;
         GLuint _position_location;
-        GLuint _uv_location;
-        GLuint _texture_location;
-        GLuint _t0_location;
-        GLuint _vao;
-        GLuint _vbo_position;
-        GLuint _vbo_uv;
-        GLuint _vbo_indices;
-        GLuint _texture_id;
-        GLuint _sampler_id;
-        Field();
+        GLuint* _vao;
+        GLuint* _vbo;
+        slam::environment::Field* _field;
+        Field(slam::environment::Field* field);
         ~Field();
         virtual void render(GLFWwindow* window, int x, int y, int width, int height);
     };
