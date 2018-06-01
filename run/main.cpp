@@ -40,7 +40,7 @@ int main(int, char**)
 
     bool show_demo_window = true;
     bool show_another_window = false;
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    ImVec4 clear_color = ImVec4(61.0f / 255.0f, 57.0f / 255.0f, 90.0f / 255.0f, 1.00f);
 
     std::unique_ptr<slam::environment::Field> field = std::make_unique<slam::environment::Field>();
     std::unique_ptr<slam::lidar::Ovserver> observer = std::make_unique<slam::lidar::Ovserver>();
@@ -126,22 +126,9 @@ int main(int, char**)
 
         // 1. Show a simple window.
         // Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets automatically appears in a window called "Debug".
+        static int num_beams = 50;
         {
-            static float f = 0.0f;
-            static int counter = 0;
-            ImGui::Text("Hello, world!"); // Display some text (you can use a format string too)
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f); // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-            ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our windows open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
-
-            if (ImGui::Button("Button")) // Buttons return true when clicked (NB: most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            ImGui::SliderInt("#beams", &num_beams, 1, 1000); // Edit 1 float using a slider from 0.0f to 1.0f
         }
 
         // Rendering
@@ -155,12 +142,10 @@ int main(int, char**)
         field_view->render(window, 0, 0, squre_length, squre_length);
 
 
-
         // 観測
         double cursor_x, cursor_y;
         glfwGetCursorPos(window, &cursor_x, &cursor_y);
         glm::vec2 location = { (static_cast<GLfloat>(cursor_x) / squre_length * 2.0 - 1.0), -(static_cast<GLfloat>(cursor_y) / squre_length * 2.0 - 1.0) };
-        int num_beams = 100;
         glm::vec4* observed_values = new glm::vec4[num_beams];
         for (int n = 0; n < num_beams; n++) {
             observed_values[n] = { 0, 0, 0, 0 };
@@ -169,10 +154,9 @@ int main(int, char**)
         observer->observe(field.get(), location, angle_rad, num_beams, observed_values);
         for (int n = 0; n < num_beams; n++) {
             auto& value = observed_values[n];
-            // std::cout << value.x << ", " << value.y << ", " << value.z << ", " << value.w << std::endl;
         }
 
-        observer_view->render(window, 0, 0, squre_length, squre_length, location, observed_values, num_beams);
+        observer_view->render(window, squre_length, 0, squre_length, squre_length, location, observed_values, num_beams);
         delete[] observed_values;
 
         glViewport(0, 0, screen_width, screen_height);

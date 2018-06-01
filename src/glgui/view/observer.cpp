@@ -19,7 +19,7 @@ void main(void)
 #version 400
 out vec4 color;
 void main(){
-    color = vec4(1.0, 0.0, 0.0, 1.0);
+    color = vec4(210.0f / 255.0f, 83.0f / 255.0f, 129.0f / 255.0f, 1.0);
 }
 )";
         _program = opengl::create_program(vertex_shader, fragment_shader);

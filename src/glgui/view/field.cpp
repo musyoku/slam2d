@@ -23,7 +23,7 @@ void main(void)
 #version 400
 out vec4 color;
 void main(){
-    color = vec4(1.0, 1.0, 1.0, 1.0);
+    color = vec4(233.0f / 255.0f, 150.0f / 255.0f, 91.0f / 255.0f, 1.0);
 }
 )";
 
