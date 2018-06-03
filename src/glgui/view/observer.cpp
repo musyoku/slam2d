@@ -56,6 +56,7 @@ void main(){
             glVertexAttribPointer(_attribute_position, 2, GL_FLOAT, GL_FALSE, 0, 0);
             glDrawArrays(GL_LINES, 0, num_observation * 2);
             glBindVertexArray(0);
+            delete[] buffer;
         }
         {
             glPointSize(5);
@@ -70,9 +71,10 @@ void main(){
             glBufferData(GL_ARRAY_BUFFER, num_observation * sizeof(GLfloat) * 2, buffer, GL_STATIC_DRAW);
             glEnableVertexAttribArray(_attribute_position);
             glVertexAttribPointer(_attribute_position, 2, GL_FLOAT, GL_FALSE, 0, 0);
-            glDrawArrays(GL_POINTS, 0, num_observation * 2);
+            glDrawArrays(GL_POINTS, 0, num_observation);
             glBindVertexArray(0);
             glPointSize(1);
+            delete[] buffer;
         }
 
         glUseProgram(0);

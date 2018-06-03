@@ -20,6 +20,8 @@ LDFLAGS = -lGL `pkg-config --static --libs glfw3`
 SOURCES = 	../src/external/gl3w/*.c \
 			../src/glgui/core/*.cpp \
 			../src/glgui/view/*.cpp \
+			../src/glgui/frame/*.cpp \
+			../src/glgui/header/*.cpp \
 			../src/slam/environment/*.cpp \
 			../src/slam/lidar/*.cpp \
 			../src/external/imgui/*.cpp \

@@ -20,7 +20,7 @@ int main(int, char**)
 #if __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "ImGui GLFW+OpenGL3 example", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "slam2d", NULL, NULL);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
     gl3wInit();
@@ -112,26 +112,18 @@ int main(int, char**)
         field->add_wall(wall);
     }
 
-    std::unique_ptr<glgui::view::Field> field_view = std::make_unique<glgui::view::Field>(field.get());
-    std::unique_ptr<glgui::view::Observer> observer_view = std::make_unique<glgui::view::Observer>();
+    std::unique_ptr<glgui::view::Field> fieldView = std::make_unique<glgui::view::Field>(field.get());
+    std::unique_ptr<glgui::view::Observer> observerView = std::make_unique<glgui::view::Observer>();
+
+    std::unique_ptr<glgui::header::Parameters> parameters = std::make_unique<glgui::header::Parameters>(50);
+    std::unique_ptr<glgui::frame::Main> mainFrame = std::make_unique<glgui::frame::Main>(parameters.get());
+
+    int time_step = 0;
 
     while (!glfwWindowShouldClose(window)) {
-
-        // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
-        // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
-        // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
-        // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
         glfwPollEvents();
         ImGui_ImplGlfwGL3_NewFrame();
 
-        // 1. Show a simple window.
-        // Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets automatically appears in a window called "Debug".
-        static int num_beams = 50;
-        {
-            ImGui::SliderInt("#beams", &num_beams, 1, 1000); // Edit 1 float using a slider from 0.0f to 1.0f
-        }
-
-        // Rendering
         int screen_width, screen_height;
         glfwGetFramebufferSize(window, &screen_width, &screen_height);
         glViewport(0, 0, screen_width, screen_height);
@@ -139,14 +131,18 @@ int main(int, char**)
         glClear(GL_COLOR_BUFFER_BIT);
 
         unsigned int squre_length = screen_width / 3.0;
-        field_view->render(window, 0, 0, squre_length, squre_length);
-
+        fieldView->render(window, 0, 0, squre_length, squre_length);
 
         // 観測
+        int num_beams = parameters->_num_beams;
         double cursor_x, cursor_y;
         glfwGetCursorPos(window, &cursor_x, &cursor_y);
-        glm::vec2 location = { (static_cast<GLfloat>(cursor_x) / squre_length * 2.0 - 1.0), -(static_cast<GLfloat>(cursor_y) / squre_length * 2.0 - 1.0) };
-        glm::vec4* observed_values = new glm::vec4[num_beams];
+        GLfloat moving_angle_rad = M_PI * (time_step % 360) * 0.01;
+        GLfloat moving_radius = 0.8;
+        glm::vec2 location;
+        location.x = moving_radius * cos(moving_angle_rad);
+        location.y = moving_radius * sin(moving_angle_rad);
+        glm::vec4* observed_values = new glm::vec4[parameters->_num_beams];
         for (int n = 0; n < num_beams; n++) {
             observed_values[n] = { 0, 0, 0, 0 };
         }
@@ -156,14 +152,16 @@ int main(int, char**)
             auto& value = observed_values[n];
         }
 
-        observer_view->render(window, squre_length, 0, squre_length, squre_length, location, observed_values, num_beams);
+        observerView->render(window, squre_length, 0, squre_length, squre_length, location, observed_values, num_beams);
         delete[] observed_values;
+
+        mainFrame->render();
 
         glViewport(0, 0, screen_width, screen_height);
         ImGui::Render();
         ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
-
+        time_step++;
     }
 
     // Cleanup
