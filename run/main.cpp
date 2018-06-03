@@ -2,6 +2,7 @@
 #include <iostream>
 #include <memory>
 #include <stdio.h>
+#include <vector>
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -20,7 +21,7 @@ int main(int, char**)
 #if __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
-    GLFWwindow* window = glfwCreateWindow(1920, 640, "slam2d", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1920, 800, "slam2d", NULL, NULL);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
     gl3wInit();
@@ -114,11 +115,13 @@ int main(int, char**)
 
     std::unique_ptr<glgui::view::Field> fieldView = std::make_unique<glgui::view::Field>(field.get());
     std::unique_ptr<glgui::view::Observer> observerView = std::make_unique<glgui::view::Observer>();
+    std::unique_ptr<glgui::view::Trajectory> trajectoryView = std::make_unique<glgui::view::Trajectory>();
 
-    std::unique_ptr<glgui::header::Parameters> parameters = std::make_unique<glgui::header::Parameters>(50);
+    std::unique_ptr<glgui::header::Parameters> parameters = std::make_unique<glgui::header::Parameters>(50, 0.5);
     std::unique_ptr<glgui::frame::Main> mainFrame = std::make_unique<glgui::frame::Main>(parameters.get());
 
     int time_step = 0;
+    std::vector<GLfloat> trajectory; // オドメトリによる軌跡
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -133,26 +136,51 @@ int main(int, char**)
         unsigned int squre_length = screen_width / 3.0;
         fieldView->render(window, 0, 0, squre_length, squre_length);
 
-        if(mainFrame->_is_slam_running){
+        if (mainFrame->_is_slam_running) {
             int num_beams = parameters->_num_beams;
             double cursor_x, cursor_y;
             glfwGetCursorPos(window, &cursor_x, &cursor_y);
-            GLfloat moving_angle_rad = M_PI * time_step / 200;
-            GLfloat moving_radius = 0.75;
+            double round_base_angle_rad = M_PI / 100.0f * parameters->_speed;
+            double round_angle_rad = -round_base_angle_rad * time_step + M_PI_2;
+            double moving_radius = 0.75f;
             glm::vec2 location;
-            location.x = moving_radius * cos(moving_angle_rad);
-            location.y = moving_radius * sin(moving_angle_rad);
+            location.x = moving_radius * cos(round_angle_rad);
+            location.y = moving_radius * sin(round_angle_rad);
+
+            // オドメトリによる位置予測
+            // 真値はlocation.xy
+            if (trajectory.size() == 0) {
+                trajectory.emplace_back(location.x);
+                trajectory.emplace_back(location.y);
+            } else {
+                double prev_location_x = trajectory[trajectory.size() - 2];
+                double prev_location_y = trajectory[trajectory.size() - 1];
+                double delta_distance = sin(round_base_angle_rad / 2.0) * moving_radius * 2.0;
+                double delta_angle = -(M_PI_2 - (M_PI - round_base_angle_rad) / 2.0);
+                double delta_moving_distance_x = cos(delta_angle) * delta_distance;
+                double delta_moving_distance_y = sin(delta_angle) * delta_distance;
+                double transform_angle_rad = -(M_PI_2 - round_angle_rad);
+                double next_location_x = cos(transform_angle_rad) * delta_moving_distance_x - sin(transform_angle_rad) * delta_moving_distance_y + prev_location_x;
+                double next_location_y = sin(transform_angle_rad) * delta_moving_distance_x + cos(transform_angle_rad) * delta_moving_distance_y + prev_location_y;
+                std::cout << delta_distance << ", " << delta_angle << ", " << transform_angle_rad << std::endl;
+                std::cout << prev_location_x << ", " << prev_location_y << " -> " << next_location_x << ", " << next_location_y << std::endl;
+                trajectory.emplace_back(next_location_x);
+                trajectory.emplace_back(next_location_y);
+            }
             glm::vec4* observed_values = new glm::vec4[parameters->_num_beams];
             for (int n = 0; n < num_beams; n++) {
                 observed_values[n] = { 0, 0, 0, 0 };
             }
-            observer->observe(field.get(), location, moving_angle_rad, num_beams, observed_values);
+            observer->observe(field.get(), location, round_angle_rad, num_beams, observed_values);
             for (int n = 0; n < num_beams; n++) {
                 auto& value = observed_values[n];
             }
 
             observerView->render(window, squre_length, 0, squre_length, squre_length, location, observed_values, num_beams);
             delete[] observed_values;
+
+            trajectoryView->render(window, squre_length * 2, 0, squre_length, squre_length, trajectory);
+            time_step++;
         }
 
         mainFrame->render();
@@ -161,7 +189,6 @@ int main(int, char**)
         ImGui::Render();
         ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
-        time_step++;
     }
 
     // Cleanup

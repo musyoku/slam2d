@@ -3,6 +3,7 @@
 #include <external/imgui/gl.h>
 #include <glgui/view/field.h>
 #include <glgui/view/observer.h>
+#include <glgui/view/trajectory.h>
 #include <glgui/frame/main.h>
 #include <glgui/header/parameters.h>
 #include <slam/environment/field.h>

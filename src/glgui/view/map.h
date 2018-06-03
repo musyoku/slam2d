@@ -6,14 +6,14 @@
 
 namespace glgui {
 namespace view {
-    class Observer : public View {
+    class Map : public View {
     public:
         GLuint _program;
         GLuint _attribute_position;
         GLuint _vao;
         GLuint _vbo;
-        Observer();
-        ~Observer();
+        Map();
+        ~Map();
         virtual void render(GLFWwindow* window, int x, int y, int width, int height, glm::vec2& location, glm::vec4* observed_values, int num_observation);
     };
 }
