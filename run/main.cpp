@@ -20,7 +20,7 @@ int main(int, char**)
 #if __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "slam2d", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1920, 640, "slam2d", NULL, NULL);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
     gl3wInit();
@@ -133,27 +133,27 @@ int main(int, char**)
         unsigned int squre_length = screen_width / 3.0;
         fieldView->render(window, 0, 0, squre_length, squre_length);
 
-        // 観測
-        int num_beams = parameters->_num_beams;
-        double cursor_x, cursor_y;
-        glfwGetCursorPos(window, &cursor_x, &cursor_y);
-        GLfloat moving_angle_rad = M_PI * (time_step % 360) * 0.01;
-        GLfloat moving_radius = 0.8;
-        glm::vec2 location;
-        location.x = moving_radius * cos(moving_angle_rad);
-        location.y = moving_radius * sin(moving_angle_rad);
-        glm::vec4* observed_values = new glm::vec4[parameters->_num_beams];
-        for (int n = 0; n < num_beams; n++) {
-            observed_values[n] = { 0, 0, 0, 0 };
-        }
-        GLfloat angle_rad = 0;
-        observer->observe(field.get(), location, angle_rad, num_beams, observed_values);
-        for (int n = 0; n < num_beams; n++) {
-            auto& value = observed_values[n];
-        }
+        if(mainFrame->_is_slam_running){
+            int num_beams = parameters->_num_beams;
+            double cursor_x, cursor_y;
+            glfwGetCursorPos(window, &cursor_x, &cursor_y);
+            GLfloat moving_angle_rad = M_PI * time_step / 200;
+            GLfloat moving_radius = 0.75;
+            glm::vec2 location;
+            location.x = moving_radius * cos(moving_angle_rad);
+            location.y = moving_radius * sin(moving_angle_rad);
+            glm::vec4* observed_values = new glm::vec4[parameters->_num_beams];
+            for (int n = 0; n < num_beams; n++) {
+                observed_values[n] = { 0, 0, 0, 0 };
+            }
+            observer->observe(field.get(), location, moving_angle_rad, num_beams, observed_values);
+            for (int n = 0; n < num_beams; n++) {
+                auto& value = observed_values[n];
+            }
 
-        observerView->render(window, squre_length, 0, squre_length, squre_length, location, observed_values, num_beams);
-        delete[] observed_values;
+            observerView->render(window, squre_length, 0, squre_length, squre_length, location, observed_values, num_beams);
+            delete[] observed_values;
+        }
 
         mainFrame->render();
 

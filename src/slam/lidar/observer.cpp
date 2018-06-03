@@ -68,7 +68,7 @@ namespace lidar {
             // 実際はフィールドの範囲が[-1, 1]なので無限遠でなくても適当に長さ10にしてもよい
             // 時計回りにビームを飛ばすので角度はマイナス
             // 座標系は現在の位置が原点
-            float beam_angle_rad = -M_PI * 2.0 * beam_index / num_beams - M_PI * 0.1;
+            float beam_angle_rad = -M_PI * 2.0 * beam_index / num_beams - M_PI * 0.1 + angle_rad;
             glm::vec2 beam_arrival_point = { cos(beam_angle_rad) * 10, sin(beam_angle_rad) * 10 };
 
             // すべての壁について衝突を計算
