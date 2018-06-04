@@ -118,6 +118,7 @@ int main(int, char**)
 
     std::unique_ptr<glgui::view::Field> fieldView = std::make_unique<glgui::view::Field>(field.get());
     std::unique_ptr<glgui::view::Observer> observerView = std::make_unique<glgui::view::Observer>(bg_color);
+    std::unique_ptr<glgui::view::Robot> robotView = std::make_unique<glgui::view::Robot>(0.1);
     std::unique_ptr<glgui::view::Trajectory> actualTrajectoryView = std::make_unique<glgui::view::Trajectory>(glm::vec3(153.0f / 255.0f, 214.0f / 255.0f, 202.0f / 255.0f));
     std::unique_ptr<glgui::view::Trajectory> estimatedTrajectoryView = std::make_unique<glgui::view::Trajectory>(glm::vec3(128.0f / 255.0f, 99.0f / 255.0f, 187.0f / 255.0f));
     std::unique_ptr<glgui::view::Map> mapView = std::make_unique<glgui::view::Map>();
@@ -136,6 +137,7 @@ int main(int, char**)
     std::vector<glm::vec4> scans; // レーザースキャナから得られた値
 
     double round_angle_rad = M_PI_2;
+    double robot_rotation_noise = 0;
     glm::vec2 last_scan_location;
     bool is_first_scan = false;
 
@@ -202,7 +204,8 @@ int main(int, char**)
                 if (noiseComponent->_odometry_stddev > 0) {
                     double prev_location_x = actual_trajectory[actual_trajectory.size() - 2];
                     double prev_location_y = actual_trajectory[actual_trajectory.size() - 1];
-                    double transform_angle_rad = -(M_PI_2 - round_angle_rad) + M_PI * slam::sampler::normal(0, noiseComponent->_odometry_stddev);
+                    robot_rotation_noise = M_PI * slam::sampler::normal(0, noiseComponent->_odometry_stddev);
+                    double transform_angle_rad = -(M_PI_2 - round_angle_rad) + robot_rotation_noise;
                     actual_location.x = cos(transform_angle_rad) * delta_moving_distance_x - sin(transform_angle_rad) * delta_moving_distance_y + prev_location_x;
                     actual_location.y = sin(transform_angle_rad) * delta_moving_distance_x + cos(transform_angle_rad) * delta_moving_distance_y + prev_location_y;
                 } else {
@@ -224,7 +227,7 @@ int main(int, char**)
                 for (int n = 0; n < num_beams; n++) {
                     scans[n] = glm::vec4(0, 0, 0, 0);
                 }
-                double robot_angle_rad = round_angle_rad - M_PI_2;
+                double robot_angle_rad = round_angle_rad - M_PI_2 + robot_rotation_noise;
 
                 observer->observe(field.get(), actual_location, robot_angle_rad, num_beams, scans);
                 last_scan_location.x = actual_location.x;
@@ -263,6 +266,7 @@ int main(int, char**)
             estimatedTrajectoryView->render(window, square_length * 2, 0, square_length, square_length, estimated_trajectory);
             actualTrajectoryView->render(window, square_length * 2, 0, square_length, square_length, actual_trajectory);
         }
+        robotView->render(window, 0, 0, square_length, square_length, last_scan_location, 0);
         mainFrame->render();
 
         glViewport(0, 0, screen_width, screen_height);

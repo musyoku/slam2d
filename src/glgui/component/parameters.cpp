@@ -14,7 +14,7 @@ namespace component {
     }
     void Parameters::render()
     {
-        if (ImGui::CollapsingHeader("Parameter")) {
+        if (ImGui::CollapsingHeader("Parameter", ImGuiTreeNodeFlags_DefaultOpen)) {
             ImGui::SliderInt("#beams", &_num_beams, 1, 1000);
             ImGui::SliderFloat("Speed", &_speed, 0, 1);
             ImGui::SliderInt("Laser scanner interval", &_laser_scanner_interval, 1, 100);

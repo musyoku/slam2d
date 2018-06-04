@@ -13,7 +13,7 @@ namespace component {
     }
     void Noise::render()
     {
-        if (ImGui::CollapsingHeader("Noise")) {
+        if (ImGui::CollapsingHeader("Noise", ImGuiTreeNodeFlags_DefaultOpen)) {
             ImGui::SliderFloat("Odometry##NoiseOdometry", &_odometry_stddev, 0, 0.1); // Odometoryというラベルはすでに使われているので適当なIDを付ける
             ImGui::SliderFloat("Scan", &_scan_stddev, 0, 0.01);
         }

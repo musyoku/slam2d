@@ -13,7 +13,7 @@ namespace component {
     }
     void Method::render()
     {
-        if (ImGui::CollapsingHeader("Method")) {
+        if (ImGui::CollapsingHeader("Method", ImGuiTreeNodeFlags_DefaultOpen)) {
             ImGui::Checkbox("Odometry", &_odometry_enabled);
         }
     }

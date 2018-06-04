@@ -5,6 +5,7 @@
 #include <glgui/view/observer.h>
 #include <glgui/view/trajectory.h>
 #include <glgui/view/map.h>
+#include <glgui/view/robot.h>
 #include <glgui/frame/main.h>
 #include <glgui/component/parameters.h>
 #include <glgui/component/noise.h>
