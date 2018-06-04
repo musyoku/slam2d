@@ -28,11 +28,7 @@ void main(){
 )";
 
         _program = opengl::create_program(vertex_shader, fragment_shader);
-
-        // shader variable indices
         _position_location = glGetAttribLocation(_program, "position");
-
-        // send vertex array data
 
         unsigned int num_walls = field->_walls.size();
         _vbo = new GLuint[num_walls];
@@ -49,15 +45,6 @@ void main(){
             glEnableVertexAttribArray(_position_location);
             glVertexAttribPointer(_position_location, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), 0);
         }
-
-        // unsigned int offset = 0;
-        // for (auto& wall : field->_walls) {
-        //     unsigned int size = wall.size() * sizeof(glm::vec2);
-        //     glBufferSubData(GL_ARRAY_BUFFER, offset, size, wall.data());
-        //     offset += size;
-        // }
-
-        // setup vertex arrays
 
         glBindVertexArray(0);
     }

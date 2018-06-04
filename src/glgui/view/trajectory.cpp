@@ -25,8 +25,6 @@ void main(){
         _program = opengl::create_program(vertex_shader, fragment_shader);
         _attribute_position = glGetAttribLocation(_program, "position");
 
-        // send vertex array data
-
         glGenBuffers(1, &_vbo);
         glGenVertexArrays(1, &_vao);
         glBindVertexArray(0);
@@ -43,7 +41,7 @@ void main(){
         int num_observation = trajectory.size() / 2;
         glBindVertexArray(_vao);
         glBindBuffer(GL_ARRAY_BUFFER, _vbo);
-        glBufferData(GL_ARRAY_BUFFER, trajectory.size() * sizeof(GLfloat), trajectory.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, 2 * num_observation * sizeof(GLfloat), trajectory.data(), GL_STATIC_DRAW);
         glEnableVertexAttribArray(_attribute_position);
         glVertexAttribPointer(_attribute_position, 2, GL_FLOAT, GL_FALSE, 0, 0);
         glDrawArrays(GL_LINE_STRIP, 0, num_observation);

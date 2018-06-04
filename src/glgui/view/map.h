@@ -3,6 +3,7 @@
 #include <external/gl3w/gl3w.h>
 #include <external/glfw/glfw3.h>
 #include <external/glm/glm.hpp>
+#include <vector>
 
 namespace glgui {
 namespace view {
@@ -14,7 +15,7 @@ namespace view {
         GLuint _vbo;
         Map();
         ~Map();
-        virtual void render(GLFWwindow* window, int x, int y, int width, int height, glm::vec2& location, glm::vec4* observed_values, int num_observation);
+        virtual void render(GLFWwindow* window, int x, int y, int width, int height, std::vector<GLfloat>& observed_points, int num_observation);
     };
 }
 }

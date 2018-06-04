@@ -121,7 +121,9 @@ int main(int, char**)
     std::unique_ptr<glgui::frame::Main> mainFrame = std::make_unique<glgui::frame::Main>(parameters.get());
 
     int time_step = 0;
-    std::vector<GLfloat> trajectory; // オドメトリによる軌跡
+    std::vector<GLfloat> trajectory;    // オドメトリによる軌跡
+    std::vector<GLfloat> map;           // 生成された地図
+    std::vector<glm::vec4> observed_values;     // レーザースキャナから得られた値
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -143,15 +145,14 @@ int main(int, char**)
             double round_base_angle_rad = M_PI / 100.0f * parameters->_speed;
             double round_angle_rad = -round_base_angle_rad * time_step + M_PI_2;
             double moving_radius = 0.75f;
-            glm::vec2 location;
-            location.x = moving_radius * cos(round_angle_rad);
-            location.y = moving_radius * sin(round_angle_rad);
 
             // オドメトリによる位置予測
             // 真値はlocation.xy
             if (trajectory.size() == 0) {
-                trajectory.emplace_back(location.x);
-                trajectory.emplace_back(location.y);
+                double initial_location_x = moving_radius * cos(round_angle_rad);
+                double initial_location_y = moving_radius * sin(round_angle_rad);
+                trajectory.emplace_back(initial_location_x);
+                trajectory.emplace_back(initial_location_y);
             } else {
                 double prev_location_x = trajectory[trajectory.size() - 2];
                 double prev_location_y = trajectory[trajectory.size() - 1];
@@ -162,23 +163,23 @@ int main(int, char**)
                 double transform_angle_rad = -(M_PI_2 - round_angle_rad);
                 double next_location_x = cos(transform_angle_rad) * delta_moving_distance_x - sin(transform_angle_rad) * delta_moving_distance_y + prev_location_x;
                 double next_location_y = sin(transform_angle_rad) * delta_moving_distance_x + cos(transform_angle_rad) * delta_moving_distance_y + prev_location_y;
-                std::cout << delta_distance << ", " << delta_angle << ", " << transform_angle_rad << std::endl;
-                std::cout << prev_location_x << ", " << prev_location_y << " -> " << next_location_x << ", " << next_location_y << std::endl;
                 trajectory.emplace_back(next_location_x);
                 trajectory.emplace_back(next_location_y);
             }
-            glm::vec4* observed_values = new glm::vec4[parameters->_num_beams];
+
+            glm::vec2 location;
+            location.x = trajectory[trajectory.size() - 2];
+            location.y = trajectory[trajectory.size() - 1];
+
+            if(observed_values.size() != parameters->_num_beams){
+                observed_values.resize(parameters->_num_beams);
+            }
             for (int n = 0; n < num_beams; n++) {
                 observed_values[n] = { 0, 0, 0, 0 };
             }
             observer->observe(field.get(), location, round_angle_rad, num_beams, observed_values);
-            for (int n = 0; n < num_beams; n++) {
-                auto& value = observed_values[n];
-            }
 
-            observerView->render(window, squre_length, 0, squre_length, squre_length, location, observed_values, num_beams);
-            delete[] observed_values;
-
+            observerView->render(window, squre_length, 0, squre_length, squre_length, location, observed_values);
             trajectoryView->render(window, squre_length * 2, 0, squre_length, squre_length, trajectory);
             time_step++;
         }

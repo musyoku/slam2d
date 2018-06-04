@@ -25,8 +25,6 @@ void main(){
         _program = opengl::create_program(vertex_shader, fragment_shader);
         _attribute_position = glGetAttribLocation(_program, "position");
 
-        // send vertex array data
-
         glGenBuffers(1, &_vbo);
         glGenVertexArrays(1, &_vao);
         glBindVertexArray(0);
@@ -34,8 +32,9 @@ void main(){
     Observer::~Observer()
     {
     }
-    void Observer::render(GLFWwindow* window, int x, int y, int width, int height, glm::vec2& location, glm::vec4* observed_values, int num_observation)
+    void Observer::render(GLFWwindow* window, int x, int y, int width, int height, glm::vec2& location, std::vector<glm::vec4> observed_values)
     {
+        int num_observation = observed_values.size() / 2;
         int window_width, window_height;
         glfwGetWindowSize(window, &window_width, &window_height);
         glViewport(x, window_height - y - height, width, height);
