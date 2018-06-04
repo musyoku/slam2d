@@ -2,12 +2,13 @@
 #include <external/imgui/imgui.h>
 
 namespace glgui {
-namespace header {
+namespace component {
     Parameters::Parameters(int num_beams, float speed, int laser_scanner_interval)
     {
         _num_beams = num_beams;
         _speed = speed;
         _laser_scanner_interval = laser_scanner_interval;
+        _odometry_enabled = false;
     }
     Parameters::~Parameters()
     {
@@ -18,6 +19,8 @@ namespace header {
             ImGui::SliderInt("#beams", &_num_beams, 1, 1000);
             ImGui::SliderFloat("Speed", &_speed, 0, 1);
             ImGui::SliderInt("Laser scanner interval", &_laser_scanner_interval, 1, 100);
+
+            ImGui::Checkbox("Odometry", &_odometry_enabled);
         }
     }
 }

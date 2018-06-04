@@ -3,7 +3,7 @@
 
 namespace glgui {
 namespace frame {
-    Main::Main(header::Parameters* parameters)
+    Main::Main(component::Parameters* parameters)
     {
         _parameters = parameters;
         _is_slam_running = false;

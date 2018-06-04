@@ -41,7 +41,7 @@ int main(int, char**)
 
     bool show_demo_window = true;
     bool show_another_window = false;
-    ImVec4 clear_color = ImVec4(61.0f / 255.0f, 57.0f / 255.0f, 90.0f / 255.0f, 1.00f);
+    glm::vec4 bg_color = glm::vec4(61.0f / 255.0f, 57.0f / 255.0f, 90.0f / 255.0f, 1.00f);
 
     std::unique_ptr<slam::environment::Field> field = std::make_unique<slam::environment::Field>();
     std::unique_ptr<slam::lidar::Ovserver> observer = std::make_unique<slam::lidar::Ovserver>();
@@ -114,11 +114,11 @@ int main(int, char**)
     }
 
     std::unique_ptr<glgui::view::Field> fieldView = std::make_unique<glgui::view::Field>(field.get());
-    std::unique_ptr<glgui::view::Observer> observerView = std::make_unique<glgui::view::Observer>();
+    std::unique_ptr<glgui::view::Observer> observerView = std::make_unique<glgui::view::Observer>(bg_color);
     std::unique_ptr<glgui::view::Trajectory> trajectoryView = std::make_unique<glgui::view::Trajectory>();
     std::unique_ptr<glgui::view::Map> mapView = std::make_unique<glgui::view::Map>();
 
-    std::unique_ptr<glgui::header::Parameters> parameters = std::make_unique<glgui::header::Parameters>(50, 0.5, 10);
+    std::unique_ptr<glgui::component::Parameters> parameters = std::make_unique<glgui::component::Parameters>(50, 0.5, 10);
     std::unique_ptr<glgui::frame::Main> mainFrame = std::make_unique<glgui::frame::Main>(parameters.get());
 
     int time_step = 0;
@@ -128,6 +128,7 @@ int main(int, char**)
 
     double round_angle_rad = M_PI_2;
     glm::vec2 last_scan_location;
+    bool is_first_scan = false;
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -136,13 +137,20 @@ int main(int, char**)
         int screen_width, screen_height;
         glfwGetFramebufferSize(window, &screen_width, &screen_height);
         glViewport(0, 0, screen_width, screen_height);
-        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+        glClearColor(bg_color.x, bg_color.y, bg_color.z, bg_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
 
         unsigned int square_length = screen_width / 3.0;
         fieldView->render(window, 0, 0, square_length, square_length);
 
         if (mainFrame->_is_slam_running) {
+            if (is_first_scan) {
+                is_first_scan = false;
+                time_step = 0;
+                map.clear();
+                trajectory.clear();
+                round_angle_rad = M_PI_2;
+            }
             int num_beams = parameters->_num_beams;
             double cursor_x, cursor_y;
             glfwGetCursorPos(window, &cursor_x, &cursor_y);
@@ -181,7 +189,7 @@ int main(int, char**)
                     scans.resize(parameters->_num_beams);
                 }
                 for (int n = 0; n < num_beams; n++) {
-                    scans[n] = { 0, 0, 0, 0 };
+                    scans[n] = glm::vec4(0, 0, 0, 0);
                 }
                 double robot_angle_rad = round_angle_rad - M_PI_2;
                 observer->observe(field.get(), location, robot_angle_rad, num_beams, scans);
@@ -194,19 +202,30 @@ int main(int, char**)
                     double distance = scan[2];
                     double angle_rad = scan[3];
                     glm::vec2 point;
-                    point.x = cos(angle_rad) * distance + location.x;
-                    point.y = sin(angle_rad) * distance + location.y;
+                    if (parameters->_odometry_enabled) {
+                        // 座標系を変換
+                        angle_rad += robot_angle_rad;
+                        point.x = cos(angle_rad) * distance + location.x;
+                        point.y = sin(angle_rad) * distance + location.y;
+                    } else {
+                        point.x = cos(angle_rad) * distance;
+                        point.y = sin(angle_rad) * distance;
+                    }
                     map.emplace_back(point.x);
                     map.emplace_back(point.y);
                 }
             }
 
-            mapView->render(window, square_length * 2, 0, square_length, square_length, map);
-            observerView->render(window, square_length, 0, square_length, square_length, last_scan_location, scans);
-            trajectoryView->render(window, square_length * 2, 0, square_length, square_length, trajectory);
             time_step++;
+        } else {
+            is_first_scan = true;
         }
 
+        mapView->render(window, square_length * 2, 0, square_length, square_length, map);
+        observerView->render(window, square_length, 0, square_length, square_length, last_scan_location, scans);
+        if (parameters->_odometry_enabled) {
+            trajectoryView->render(window, square_length * 2, 0, square_length, square_length, trajectory);
+        }
         mainFrame->render();
 
         glViewport(0, 0, screen_width, screen_height);

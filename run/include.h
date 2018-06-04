@@ -6,6 +6,6 @@
 #include <glgui/view/trajectory.h>
 #include <glgui/view/map.h>
 #include <glgui/frame/main.h>
-#include <glgui/header/parameters.h>
+#include <glgui/component/parameters.h>
 #include <slam/environment/field.h>
 #include <slam/lidar/observer.h>

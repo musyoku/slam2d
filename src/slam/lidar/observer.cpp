@@ -56,7 +56,7 @@ namespace lidar {
             // 時計回りにビームを飛ばすので角度はマイナス
             // 座標系は現在の位置が原点
             float beam_angle_rad = -M_PI * 2.0 * beam_index / num_beams - M_PI * 0.1 + angle_rad;
-            glm::vec2 beam_arrival_point = { cos(beam_angle_rad) * 10, sin(beam_angle_rad) * 10 };
+            glm::vec2 beam_arrival_point = glm::vec2(cos(beam_angle_rad) * 10, sin(beam_angle_rad) * 10);
 
             // すべての壁について衝突を計算
             for (auto& wall : field->_walls) {
@@ -79,13 +79,12 @@ namespace lidar {
                 }
             }
 
-            scans[beam_index] = {
-                // 座標空間をもとに戻す
-                beam_arrival_point.x + location.x,
-                beam_arrival_point.y + location.y,
-                compute_vector_length(beam_arrival_point),
-                beam_angle_rad
-            };
+            // 座標空間をもとに戻す
+            scans[beam_index] = glm::vec4(
+                beam_arrival_point.x + location.x, // グローバル座標
+                beam_arrival_point.y + location.y, // グローバル座標
+                compute_vector_length(beam_arrival_point),  // ロボットのローカル座標
+                beam_angle_rad - angle_rad);                // ロボットのローカル座標
         }
     }
 }

@@ -5,7 +5,7 @@
 
 namespace glgui {
 namespace view {
-    Observer::Observer()
+    Observer::Observer(glm::vec4& bg_color)
     {
         const GLchar vertex_shader[] = R"(
 #version 400
@@ -18,13 +18,15 @@ void main(void)
         const GLchar fragment_shader[] = R"(
 #version 400
 out vec4 color;
+uniform float alpha; 
+uniform vec3 bg_color; 
 void main(){
-    color = vec4(210.0f / 255.0f, 83.0f / 255.0f, 129.0f / 255.0f, 1.0);
+    color = vec4(vec3(210.0f / 255.0f, 83.0f / 255.0f, 129.0f / 255.0f) * alpha + (1.0f - alpha) * bg_color, 1.0);
 }
 )";
         _program = opengl::create_program(vertex_shader, fragment_shader);
         _attribute_position = glGetAttribLocation(_program, "position");
-
+        _bg_color = bg_color;
         glGenBuffers(1, &_vbo);
         glGenVertexArrays(1, &_vao);
         glBindVertexArray(0);
@@ -53,6 +55,8 @@ void main(){
             glBufferData(GL_ARRAY_BUFFER, 4 * num_observation * sizeof(GLfloat), buffer, GL_STATIC_DRAW);
             glEnableVertexAttribArray(_attribute_position);
             glVertexAttribPointer(_attribute_position, 2, GL_FLOAT, GL_FALSE, 0, 0);
+            glUniform1f(glGetUniformLocation(_program, "alpha"), 0.5f);
+            glUniform3f(glGetUniformLocation(_program, "bg_color"), _bg_color.x, _bg_color.y, _bg_color.z);
             glDrawArrays(GL_LINES, 0, num_observation * 2);
             glBindVertexArray(0);
             delete[] buffer;
@@ -70,6 +74,8 @@ void main(){
             glBufferData(GL_ARRAY_BUFFER, num_observation * sizeof(GLfloat) * 2, buffer, GL_STATIC_DRAW);
             glEnableVertexAttribArray(_attribute_position);
             glVertexAttribPointer(_attribute_position, 2, GL_FLOAT, GL_FALSE, 0, 0);
+            glUniform1f(glGetUniformLocation(_program, "alpha"), 1.0f);
+            glUniform3f(glGetUniformLocation(_program, "bg_color"), _bg_color.x, _bg_color.y, _bg_color.z);
             glDrawArrays(GL_POINTS, 0, num_observation);
             glBindVertexArray(0);
             glPointSize(1);
