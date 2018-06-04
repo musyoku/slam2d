@@ -48,7 +48,7 @@ namespace lidar {
         float new_beam_scale = std::min(1.0f, new_beam_length / beam_length);
         return old_beam_arrival_point * new_beam_scale;
     }
-    void Ovserver::observe(environment::Field* field, glm::vec2& location, float angle_rad, int num_beams, std::vector<glm::vec4>& observed_values)
+    void Ovserver::observe(environment::Field* field, glm::vec2& location, float angle_rad, int num_beams, std::vector<glm::vec4>& scans)
     {
         for (int beam_index = 0; beam_index < num_beams; beam_index++) {
             // まず位置locationから角度angle_radで無限遠にビームを飛ばしたときの到達位置を考える
@@ -79,7 +79,7 @@ namespace lidar {
                 }
             }
 
-            observed_values[beam_index] = {
+            scans[beam_index] = {
                 // 座標空間をもとに戻す
                 beam_arrival_point.x + location.x,
                 beam_arrival_point.y + location.y,

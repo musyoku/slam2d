@@ -15,7 +15,7 @@ namespace view {
         GLuint _vbo;
         Observer();
         ~Observer();
-        virtual void render(GLFWwindow* window, int x, int y, int width, int height, glm::vec2& location, std::vector<glm::vec4> observed_values);
+        virtual void render(GLFWwindow* window, int x, int y, int width, int height, glm::vec2& location, std::vector<glm::vec4> scans);
     };
 }
 }

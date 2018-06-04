@@ -123,8 +123,9 @@ int main(int, char**)
     int time_step = 0;
     std::vector<GLfloat> trajectory; // オドメトリによる軌跡
     std::vector<GLfloat> map; // 生成された地図
-    std::vector<glm::vec4> observed_values; // レーザースキャナから得られた値
+    std::vector<glm::vec4> scans; // レーザースキャナから得られた値
 
+    double round_angle_rad = M_PI_2;
     glm::vec2 last_scan_location;
 
     while (!glfwWindowShouldClose(window)) {
@@ -145,7 +146,7 @@ int main(int, char**)
             double cursor_x, cursor_y;
             glfwGetCursorPos(window, &cursor_x, &cursor_y);
             double round_base_angle_rad = M_PI / 100.0f * parameters->_speed;
-            double round_angle_rad = -round_base_angle_rad * time_step + M_PI_2;
+            round_angle_rad -= round_base_angle_rad;
             double moving_radius = 0.75f;
 
             // オドメトリによる位置予測
@@ -176,19 +177,19 @@ int main(int, char**)
 
             // レーザースキャナによる観測
             if (time_step % parameters->_laser_scanner_interval == 0) {
-                if (observed_values.size() != parameters->_num_beams) {
-                    observed_values.resize(parameters->_num_beams);
+                if (scans.size() != parameters->_num_beams) {
+                    scans.resize(parameters->_num_beams);
                 }
                 for (int n = 0; n < num_beams; n++) {
-                    observed_values[n] = { 0, 0, 0, 0 };
+                    scans[n] = { 0, 0, 0, 0 };
                 }
-                observer->observe(field.get(), location, round_angle_rad, num_beams, observed_values);
+                observer->observe(field.get(), location, round_angle_rad, num_beams, scans);
                 last_scan_location.x = location.x;
                 last_scan_location.y = location.y;
                 // 地図構築
             }
 
-            observerView->render(window, squre_length, 0, squre_length, squre_length, last_scan_location, observed_values);
+            observerView->render(window, squre_length, 0, squre_length, squre_length, last_scan_location, scans);
             trajectoryView->render(window, squre_length * 2, 0, squre_length, squre_length, trajectory);
             time_step++;
         }

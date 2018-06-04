@@ -32,9 +32,9 @@ void main(){
     Observer::~Observer()
     {
     }
-    void Observer::render(GLFWwindow* window, int x, int y, int width, int height, glm::vec2& location, std::vector<glm::vec4> observed_values)
+    void Observer::render(GLFWwindow* window, int x, int y, int width, int height, glm::vec2& location, std::vector<glm::vec4> scans)
     {
-        int num_observation = observed_values.size() / 2;
+        int num_observation = scans.size() / 2;
         int window_width, window_height;
         glfwGetWindowSize(window, &window_width, &window_height);
         glViewport(x, window_height - y - height, width, height);
@@ -42,7 +42,7 @@ void main(){
         {
             GLfloat* buffer = new GLfloat[num_observation * 4];
             for (int n = 0; n < num_observation; n++) {
-                auto& value = observed_values[n];
+                auto& value = scans[n];
                 buffer[n * 4 + 0] = location.x;
                 buffer[n * 4 + 1] = location.y;
                 buffer[n * 4 + 2] = value.x;
@@ -61,7 +61,7 @@ void main(){
             glPointSize(5);
             GLfloat* buffer = new GLfloat[num_observation * 2];
             for (int n = 0; n < num_observation; n++) {
-                auto& value = observed_values[n];
+                auto& value = scans[n];
                 buffer[n * 2 + 0] = value.x;
                 buffer[n * 2 + 1] = value.y;
             }
