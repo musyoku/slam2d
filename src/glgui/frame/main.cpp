@@ -3,9 +3,11 @@
 
 namespace glgui {
 namespace frame {
-    Main::Main(component::Parameters* parameters)
+    Main::Main(component::Parameters* parameters, component::Method* method, component::Noise* noise)
     {
         _parameters = parameters;
+        _noise = noise;
+        _method = method;
         _is_slam_running = false;
     }
     Main::~Main()
@@ -23,6 +25,8 @@ namespace frame {
             }
         }
         _parameters->render();
+        _method->render();
+        _noise->render();
     }
 }
 }

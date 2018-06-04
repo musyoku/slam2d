@@ -24,6 +24,7 @@ SOURCES = 	../src/external/gl3w/*.c \
 			../src/glgui/component/*.cpp \
 			../src/slam/environment/*.cpp \
 			../src/slam/lidar/*.cpp \
+			../src/slam/math/*.cpp \
 			../src/external/imgui/*.cpp \
 
 glgui: 

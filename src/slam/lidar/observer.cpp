@@ -1,4 +1,5 @@
 #include "observer.h"
+#include "../math/sampler.h"
 #include <cmath>
 #include <iostream>
 using std::endl;
@@ -48,7 +49,11 @@ namespace lidar {
         float new_beam_scale = std::min(1.0f, new_beam_length / beam_length);
         return old_beam_arrival_point * new_beam_scale;
     }
-    void Ovserver::observe(environment::Field* field, glm::vec2& location, float angle_rad, int num_beams, std::vector<glm::vec4>& scans)
+    Observer::Observer(double noise_stddev)
+    {
+        _noise_stddev = noise_stddev;
+    }
+    void Observer::observe(environment::Field* field, glm::vec2& location, float angle_rad, int num_beams, std::vector<glm::vec4>& scans)
     {
         for (int beam_index = 0; beam_index < num_beams; beam_index++) {
             // まず位置locationから角度angle_radで無限遠にビームを飛ばしたときの到達位置を考える
@@ -79,12 +84,18 @@ namespace lidar {
                 }
             }
 
+            // ノイズ
+            if (_noise_stddev > 0) {
+                beam_arrival_point.x += slam::sampler::normal(0, _noise_stddev);
+                beam_arrival_point.y += slam::sampler::normal(0, _noise_stddev);
+            }
+
             // 座標空間をもとに戻す
             scans[beam_index] = glm::vec4(
                 beam_arrival_point.x + location.x, // グローバル座標
                 beam_arrival_point.y + location.y, // グローバル座標
-                compute_vector_length(beam_arrival_point),  // ロボットのローカル座標
-                beam_angle_rad - angle_rad);                // ロボットのローカル座標
+                compute_vector_length(beam_arrival_point), // ロボットのローカル座標
+                beam_angle_rad - angle_rad); // ロボットのローカル座標
         }
     }
 }

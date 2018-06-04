@@ -7,5 +7,8 @@
 #include <glgui/view/map.h>
 #include <glgui/frame/main.h>
 #include <glgui/component/parameters.h>
+#include <glgui/component/noise.h>
+#include <glgui/component/method.h>
 #include <slam/environment/field.h>
 #include <slam/lidar/observer.h>
+#include <slam/math/sampler.h>
