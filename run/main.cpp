@@ -170,8 +170,8 @@ int main(int, char**)
     std::unique_ptr<glgui::frame::Main> mainFrame = std::make_unique<glgui::frame::Main>(paramComponent.get(), methodComponent.get(), noiseComponent.get());
 
     std::unique_ptr<slam::lidar::Observer> observer = std::make_unique<slam::lidar::Observer>(noiseComponent->_scan_stddev);
-    std::unique_ptr<slam::scan_matching::Associator> associator = std::make_unique<slam::scan_matching::Associator>(0.1);
-    std::unique_ptr<slam::scan_matching::IterativeClosestPoints> icp = std::make_unique<slam::scan_matching::IterativeClosestPoints>(associator.get());
+    std::unique_ptr<slam::scan_matching::Associator> associator = std::make_unique<slam::scan_matching::Associator>(0.2);
+    std::unique_ptr<slam::scan_matching::IterativeClosestPoints> icp = std::make_unique<slam::scan_matching::IterativeClosestPoints>(associator.get(), 0.001, 1000, 0.01);
 
     int time_step = 0;
     std::vector<GLfloat> actual_trajectory; // 実際の軌跡
@@ -196,7 +196,7 @@ int main(int, char**)
     glm::vec2 actual_location;
 
     // 前回のスキャン
-    std::vector<glm::vec2> prev_scan;
+    std::vector<glm::vec2> prev_scan_points;
 
     while (!!glfwWindowShouldClose(window) == false) {
         glfwPollEvents();
@@ -226,7 +226,7 @@ int main(int, char**)
             round_angle_rad -= round_base_angle_rad;
 
             // オドメトリによる位置予測
-            if (actual_trajectory.size() == 0) {
+            if (is_first_scan) {
                 estimated_location.x = moving_radius * cos(round_angle_rad);
                 estimated_location.y = moving_radius * sin(round_angle_rad);
                 estimated_trajectory.emplace_back(estimated_location.x);
@@ -238,9 +238,9 @@ int main(int, char**)
             } else {
                 // 微小時間ではロボットは直進しているとみなす
                 double delta_distance = sin(round_base_angle_rad / 2.0) * moving_radius * 2.0;
-                double delta_angle = -(M_PI_2 - (M_PI - round_base_angle_rad) / 2.0);
-                double delta_moving_distance_x = cos(delta_angle) * delta_distance;
-                double delta_moving_distance_y = sin(delta_angle) * delta_distance;
+                double delta_angle_rad = -(M_PI_2 - (M_PI - round_base_angle_rad) / 2.0);
+                double delta_moving_distance_x = cos(delta_angle_rad) * delta_distance;
+                double delta_moving_distance_y = sin(delta_angle_rad) * delta_distance;
                 double transform_angle_rad = -(M_PI_2 - round_angle_rad);
 
                 double prev_location_x = estimated_trajectory[estimated_trajectory.size() - 2];
@@ -267,56 +267,106 @@ int main(int, char**)
                 actual_trajectory.emplace_back(actual_location.y);
                 estimated_trajectory.emplace_back(estimated_location.x);
                 estimated_trajectory.emplace_back(estimated_location.y);
-            }
 
-            // レーザースキャナによる観測
-            if (time_step % paramComponent->_laser_scanner_interval == 0) {
-                if (scans.size() != paramComponent->_num_beams) {
-                    scans.resize(paramComponent->_num_beams);
-                }
-                for (int n = 0; n < num_beams; n++) {
-                    scans[n] = glm::vec4(0, 0, 0, 0);
-                }
-                double estimated_robot_angle_rad = round_angle_rad - M_PI_2;
-                double actual_robot_angle_rad = estimated_robot_angle_rad + robot_rotation_noise;
+                // レーザースキャナによる観測
+                if (time_step % paramComponent->_laser_scanner_interval == 0) {
+                    if (scans.size() != paramComponent->_num_beams) {
+                        scans.resize(paramComponent->_num_beams);
+                    }
+                    for (int n = 0; n < num_beams; n++) {
+                        scans[n] = glm::vec4(0, 0, 0, 0);
+                    }
+                    double estimated_robot_angle_rad = round_angle_rad - M_PI_2;
+                    double actual_robot_angle_rad = estimated_robot_angle_rad + robot_rotation_noise;
 
-                observer->observe(field.get(), actual_location, actual_robot_angle_rad, num_beams, scans);
-                last_scan_location.x = actual_location.x;
-                last_scan_location.y = actual_location.y;
-                last_scan_robot_angle_rad = actual_robot_angle_rad;
+                    observer->observe(field.get(), actual_location, actual_robot_angle_rad, num_beams, scans);
+                    last_scan_location.x = actual_location.x;
+                    last_scan_location.y = actual_location.y;
+                    last_scan_robot_angle_rad = actual_robot_angle_rad;
 
-                // 地図構築
-                // スキャンマッチング
-                std::vector<glm::vec2> current_scan;
-                for (int n = 0; n < num_beams; n++) {
-                    // 座標変換
-                    glm::vec4& scan = scans[n];
-                    double distance = scan[2];
-                    double angle_rad = scan[3];
-                    glm::vec2 point;
-                    if (methodComponent->_odometry_enabled) {
-                        // 座標系を変換
-                        angle_rad += estimated_robot_angle_rad;
-                        // ロボットはノイズの影響がわからないので予測位置を使う
-                        point.x = cos(angle_rad) * distance + estimated_location.x;
-                        point.y = sin(angle_rad) * distance + estimated_location.y;
-                    } else {
+                    // 地図構築
+                    // スキャンマッチング
+                    std::vector<glm::vec2> current_scan_points;
+                    for (int n = 0; n < num_beams; n++) {
+                        // スキャンデータをセンサ座標系に変換
+                        glm::vec4& scan = scans[n];
+                        double distance = scan[2];
+                        double angle_rad = scan[3];
+                        glm::vec2 point;
                         point.x = cos(angle_rad) * distance;
                         point.y = sin(angle_rad) * distance;
+                        // if (methodComponent->_odometry_enabled) {
+                        //     // 座標系を変換
+                        //     angle_rad += estimated_robot_angle_rad;
+                        //     // ロボットはノイズの影響がわからないので予測位置を使う
+                        //     point.x = cos(angle_rad) * distance + estimated_location.x;
+                        //     point.y = sin(angle_rad) * distance + estimated_location.y;
+                        // } else {
+                        //     point.x = cos(angle_rad) * distance;
+                        //     point.y = sin(angle_rad) * distance;
+                        // }
+                        // map.emplace_back(point.x);
+                        // map.emplace_back(point.y);
+                        current_scan_points.emplace_back(point);
                     }
-                    // map.emplace_back(point.x);
-                    // map.emplace_back(point.y);
-                    current_scan.emplace_back(point);
-                }
-                if (is_first_scan == false) {
-                    if (methodComponent->_scan_matching_enabled) {
-                        
+
+                    if (methodComponent->_scan_matching_enabled && prev_scan_points.size() == current_scan_points.size()) {
+                        glm::vec2 d0(delta_moving_distance_x, delta_moving_distance_y);
+                        double estimated_delta_algne_rad = delta_angle_rad;
+                        icp->match(prev_scan_points, current_scan_points, d0, estimated_delta_algne_rad);
+                        std::cout << delta_moving_distance_x << ", " << delta_moving_distance_y << " -> " << d0.x << ", " << d0.y << std::endl;
+
+                        double transform_angle_rad = -(M_PI_2 - round_angle_rad);
+                        double prev_location_x = estimated_trajectory[estimated_trajectory.size() - 2];
+                        double prev_location_y = estimated_trajectory[estimated_trajectory.size() - 1];
+                        estimated_location.x = cos(transform_angle_rad) * d0.x - sin(transform_angle_rad) * d0.y + prev_location_x;
+                        estimated_location.y = sin(transform_angle_rad) * d0.x + cos(transform_angle_rad) * d0.y + prev_location_y;
+
+                        for (int n = 0; n < num_beams; n++) {
+                            // スキャンデータをセンサ座標系に変換
+                            glm::vec4& scan = scans[n];
+                            double distance = scan[2];
+                            double angle_rad = scan[3];
+                            glm::vec2 point;
+                            point.x = cos(angle_rad) * distance;
+                            point.y = sin(angle_rad) * distance;
+                            if (methodComponent->_odometry_enabled) {
+                                // 座標系を変換
+                                angle_rad += estimated_robot_angle_rad;
+                                // ロボットはノイズの影響がわからないので予測位置を使う
+                                point.x = cos(angle_rad) * distance + estimated_location.x;
+                                point.y = sin(angle_rad) * distance + estimated_location.y;
+                            } else {
+                                point.x = cos(angle_rad) * distance;
+                                point.y = sin(angle_rad) * distance;
+                            }
+                            map.emplace_back(point.x);
+                            map.emplace_back(point.y);
+                        }
                     } else {
-                        for (glm::vec2& point : current_scan) {
+                        for (int n = 0; n < num_beams; n++) {
+                            // スキャンデータをセンサ座標系に変換
+                            glm::vec4& scan = scans[n];
+                            double distance = scan[2];
+                            double angle_rad = scan[3];
+                            glm::vec2 point;
+                            point.x = cos(angle_rad) * distance;
+                            point.y = sin(angle_rad) * distance;
+                            if (methodComponent->_odometry_enabled) {
+                                // 座標系を変換
+                                angle_rad += estimated_robot_angle_rad;
+                                // ロボットはノイズの影響がわからないので予測位置を使う
+                                point.x = cos(angle_rad) * distance + estimated_location.x;
+                                point.y = sin(angle_rad) * distance + estimated_location.y;
+                            } else {
+                                point.x = cos(angle_rad) * distance;
+                                point.y = sin(angle_rad) * distance;
+                            }
                             map.emplace_back(point.x);
                             map.emplace_back(point.y);
                         }
                     }
+                    prev_scan_points = current_scan_points;
                 }
             }
 
@@ -324,6 +374,7 @@ int main(int, char**)
             if (is_first_scan) {
                 is_first_scan = false;
             }
+
         } else {
             is_first_scan = true;
             actual_location.x = moving_radius * cos(round_angle_rad);
