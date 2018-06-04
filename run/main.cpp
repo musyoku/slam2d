@@ -118,7 +118,8 @@ int main(int, char**)
 
     std::unique_ptr<glgui::view::Field> fieldView = std::make_unique<glgui::view::Field>(field.get());
     std::unique_ptr<glgui::view::Observer> observerView = std::make_unique<glgui::view::Observer>(bg_color);
-    std::unique_ptr<glgui::view::Trajectory> trajectoryView = std::make_unique<glgui::view::Trajectory>();
+    std::unique_ptr<glgui::view::Trajectory> actualTrajectoryView = std::make_unique<glgui::view::Trajectory>(glm::vec3(153.0f / 255.0f, 214.0f / 255.0f, 202.0f / 255.0f));
+    std::unique_ptr<glgui::view::Trajectory> estimatedTrajectoryView = std::make_unique<glgui::view::Trajectory>(glm::vec3(128.0f / 255.0f, 99.0f / 255.0f, 187.0f / 255.0f));
     std::unique_ptr<glgui::view::Map> mapView = std::make_unique<glgui::view::Map>();
 
     std::unique_ptr<glgui::component::Parameters> paramComponent = std::make_unique<glgui::component::Parameters>(50, 0.5, 10);
@@ -129,7 +130,8 @@ int main(int, char**)
     std::unique_ptr<slam::lidar::Observer> observer = std::make_unique<slam::lidar::Observer>(noiseComponent->_scan_stddev);
 
     int time_step = 0;
-    std::vector<GLfloat> trajectory; // オドメトリによる軌跡
+    std::vector<GLfloat> actual_trajectory; // 実際の軌跡
+    std::vector<GLfloat> estimated_trajectory; // 予測した軌跡
     std::vector<GLfloat> map; // 生成された地図
     std::vector<glm::vec4> scans; // レーザースキャナから得られた値
 
@@ -155,7 +157,8 @@ int main(int, char**)
                 is_first_scan = false;
                 time_step = 0;
                 map.clear();
-                trajectory.clear();
+                actual_trajectory.clear();
+                estimated_trajectory.clear();
                 round_angle_rad = M_PI_2;
             }
             observer->_noise_stddev = noiseComponent->_scan_stddev;
@@ -167,36 +170,51 @@ int main(int, char**)
             round_angle_rad -= round_base_angle_rad;
             double moving_radius = 0.75f;
 
+            // ロボット地震が予測したロボットの現在位置
+            glm::vec2 estimated_location;
+            // 実際のロボットの位置
+            glm::vec2 actual_location;
+
             // オドメトリによる位置予測
-            if (trajectory.size() == 0) {
-                double initial_location_x = moving_radius * cos(round_angle_rad);
-                double initial_location_y = moving_radius * sin(round_angle_rad);
-                trajectory.emplace_back(initial_location_x);
-                trajectory.emplace_back(initial_location_y);
+            if (actual_trajectory.size() == 0) {
+                estimated_location.x = moving_radius * cos(round_angle_rad);
+                estimated_location.y = moving_radius * sin(round_angle_rad);
+                estimated_trajectory.emplace_back(estimated_location.x);
+                estimated_trajectory.emplace_back(estimated_location.y);
+                actual_location.x = estimated_location.x;
+                actual_location.y = estimated_location.y;
+                actual_trajectory.emplace_back(actual_location.x);
+                actual_trajectory.emplace_back(actual_location.y);
             } else {
                 // 微小時間ではロボットは直進しているとみなす
-                double prev_location_x = trajectory[trajectory.size() - 2];
-                double prev_location_y = trajectory[trajectory.size() - 1];
                 double delta_distance = sin(round_base_angle_rad / 2.0) * moving_radius * 2.0;
                 double delta_angle = -(M_PI_2 - (M_PI - round_base_angle_rad) / 2.0);
                 double delta_moving_distance_x = cos(delta_angle) * delta_distance;
                 double delta_moving_distance_y = sin(delta_angle) * delta_distance;
                 double transform_angle_rad = -(M_PI_2 - round_angle_rad);
-                double next_location_x = cos(transform_angle_rad) * delta_moving_distance_x - sin(transform_angle_rad) * delta_moving_distance_y + prev_location_x;
-                double next_location_y = sin(transform_angle_rad) * delta_moving_distance_x + cos(transform_angle_rad) * delta_moving_distance_y + prev_location_y;
-                // ノイズ
-                if (noiseComponent->_odometry_stddev > 0) {
-                    next_location_x += slam::sampler::normal(0, noiseComponent->_odometry_stddev);
-                    next_location_y += slam::sampler::normal(0, noiseComponent->_odometry_stddev);
-                }
-                trajectory.emplace_back(next_location_x);
-                trajectory.emplace_back(next_location_y);
-            }
 
-            // ロボットの移動
-            glm::vec2 true_location;
-            true_location.x = trajectory[trajectory.size() - 2];
-            true_location.y = trajectory[trajectory.size() - 1];
+                double prev_location_x = estimated_trajectory[estimated_trajectory.size() - 2];
+                double prev_location_y = estimated_trajectory[estimated_trajectory.size() - 1];
+                estimated_location.x = cos(transform_angle_rad) * delta_moving_distance_x - sin(transform_angle_rad) * delta_moving_distance_y + prev_location_x;
+                estimated_location.y = sin(transform_angle_rad) * delta_moving_distance_x + cos(transform_angle_rad) * delta_moving_distance_y + prev_location_y;
+
+                // 実際のロボット位置にはノイズが乗る
+                if (noiseComponent->_odometry_stddev > 0) {
+                    double prev_location_x = actual_trajectory[actual_trajectory.size() - 2];
+                    double prev_location_y = actual_trajectory[actual_trajectory.size() - 1];
+                    double transform_angle_rad = -(M_PI_2 - round_angle_rad) + M_PI * slam::sampler::normal(0, noiseComponent->_odometry_stddev);
+                    actual_location.x = cos(transform_angle_rad) * delta_moving_distance_x - sin(transform_angle_rad) * delta_moving_distance_y + prev_location_x;
+                    actual_location.y = sin(transform_angle_rad) * delta_moving_distance_x + cos(transform_angle_rad) * delta_moving_distance_y + prev_location_y;
+                } else {
+                    actual_location.x = estimated_location.x;
+                    actual_location.y = estimated_location.y;
+                }
+
+                actual_trajectory.emplace_back(actual_location.x);
+                actual_trajectory.emplace_back(actual_location.y);
+                estimated_trajectory.emplace_back(estimated_location.x);
+                estimated_trajectory.emplace_back(estimated_location.y);
+            }
 
             // レーザースキャナによる観測
             if (time_step % paramComponent->_laser_scanner_interval == 0) {
@@ -207,9 +225,11 @@ int main(int, char**)
                     scans[n] = glm::vec4(0, 0, 0, 0);
                 }
                 double robot_angle_rad = round_angle_rad - M_PI_2;
-                observer->observe(field.get(), true_location, robot_angle_rad, num_beams, scans);
-                last_scan_location.x = true_location.x;
-                last_scan_location.y = true_location.y;
+
+                observer->observe(field.get(), actual_location, robot_angle_rad, num_beams, scans);
+                last_scan_location.x = actual_location.x;
+                last_scan_location.y = actual_location.y;
+
                 // 地図構築
                 for (int n = 0; n < num_beams; n++) {
                     // 座標変換
@@ -220,8 +240,9 @@ int main(int, char**)
                     if (methodComponent->_odometry_enabled) {
                         // 座標系を変換
                         angle_rad += robot_angle_rad;
-                        point.x = cos(angle_rad) * distance + true_location.x;
-                        point.y = sin(angle_rad) * distance + true_location.y;
+                        // ロボットはノイズの影響がわからないので予測位置を使う
+                        point.x = cos(angle_rad) * distance + estimated_location.x;
+                        point.y = sin(angle_rad) * distance + estimated_location.y;
                     } else {
                         point.x = cos(angle_rad) * distance;
                         point.y = sin(angle_rad) * distance;
@@ -239,7 +260,8 @@ int main(int, char**)
         mapView->render(window, square_length * 2, 0, square_length, square_length, map);
         observerView->render(window, square_length, 0, square_length, square_length, last_scan_location, scans);
         if (methodComponent->_odometry_enabled) {
-            trajectoryView->render(window, square_length * 2, 0, square_length, square_length, trajectory);
+            estimatedTrajectoryView->render(window, square_length * 2, 0, square_length, square_length, estimated_trajectory);
+            actualTrajectoryView->render(window, square_length * 2, 0, square_length, square_length, actual_trajectory);
         }
         mainFrame->render();
 

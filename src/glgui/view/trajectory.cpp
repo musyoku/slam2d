@@ -5,7 +5,7 @@
 
 namespace glgui {
 namespace view {
-    Trajectory::Trajectory()
+    Trajectory::Trajectory(glm::vec3 color)
     {
         const GLchar vertex_shader[] = R"(
 #version 400
@@ -18,12 +18,14 @@ void main(void)
         const GLchar fragment_shader[] = R"(
 #version 400
 out vec4 color;
+uniform vec3 line_color;
 void main(){
-    color = vec4(153.0f / 255.0f, 214.0f / 255.0f, 202.0f / 255.0f, 1.0);
+    color = vec4(line_color, 1.0);
 }
 )";
         _program = opengl::create_program(vertex_shader, fragment_shader);
         _attribute_position = glGetAttribLocation(_program, "position");
+        _color = color;
 
         glGenBuffers(1, &_vbo);
         glGenVertexArrays(1, &_vao);
@@ -44,6 +46,7 @@ void main(){
         glBufferData(GL_ARRAY_BUFFER, 2 * num_observation * sizeof(GLfloat), trajectory.data(), GL_STATIC_DRAW);
         glEnableVertexAttribArray(_attribute_position);
         glVertexAttribPointer(_attribute_position, 2, GL_FLOAT, GL_FALSE, 0, 0);
+        glUniform3f(glGetUniformLocation(_program, "line_color"), _color.x, _color.y, _color.z);
         glDrawArrays(GL_LINE_STRIP, 0, num_observation);
         glBindVertexArray(0);
         glUseProgram(0);
