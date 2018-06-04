@@ -29,9 +29,6 @@ void main(){
         glGenVertexArrays(1, &_vao);
         glBindVertexArray(0);
     }
-    Map::~Map()
-    {
-    }
     void Map::render(GLFWwindow* window, int x, int y, int width, int height, std::vector<GLfloat>& observed_points)
     {
         int num_points = observed_points.size() / 2;

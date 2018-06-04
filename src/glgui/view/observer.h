@@ -15,7 +15,6 @@ namespace view {
         GLuint _vbo;
         glm::vec4 _bg_color;
         Observer(glm::vec4& bg_color);
-        ~Observer();
         virtual void render(GLFWwindow* window, int x, int y, int width, int height, glm::vec2& location, std::vector<glm::vec4> scans);
     };
 }

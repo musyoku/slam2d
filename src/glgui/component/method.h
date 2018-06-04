@@ -7,7 +7,6 @@ namespace component {
         bool _odometry_enabled;
         bool _scan_matching_enabled;
         Method();
-        ~Method();
         void render();
     };
 }

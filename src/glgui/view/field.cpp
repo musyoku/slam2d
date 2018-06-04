@@ -48,9 +48,6 @@ void main(){
 
         glBindVertexArray(0);
     }
-    Field::~Field()
-    {
-    }
     void Field::render(GLFWwindow* window, int x, int y, int width, int height)
     {
         int window_width, window_height;

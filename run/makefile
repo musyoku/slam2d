@@ -25,6 +25,7 @@ SOURCES = 	../src/external/gl3w/*.c \
 			../src/slam/environment/*.cpp \
 			../src/slam/lidar/*.cpp \
 			../src/slam/math/*.cpp \
+			../src/slam/scan_matching/*.cpp \
 			../src/external/imgui/*.cpp \
 
 glgui: 

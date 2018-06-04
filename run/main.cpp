@@ -130,10 +130,10 @@ void build_field(slam::environment::Field* field)
 
 int main(int, char**)
 {
-    // Setup window
     glfwSetErrorCallback(glfw_error_callback);
-    if (!glfwInit())
+    if (!!glfwInit() == false) {
         return 1;
+    }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -145,21 +145,13 @@ int main(int, char**)
     glfwSwapInterval(1); // Enable vsync
     gl3wInit();
 
-    // Setup Dear ImGui binding
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     (void)io;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
     ImGui_ImplGlfwGL3_Init(window, true);
-
-    // Setup style
     ImGui::StyleColorsDark();
-    //ImGui::StyleColorsClassic();
 
-    bool show_demo_window = true;
-    bool show_another_window = false;
     glm::vec4 bg_color = glm::vec4(61.0f / 255.0f, 57.0f / 255.0f, 90.0f / 255.0f, 1.00f);
 
     std::unique_ptr<slam::environment::Field> field = std::make_unique<slam::environment::Field>();
@@ -178,6 +170,8 @@ int main(int, char**)
     std::unique_ptr<glgui::frame::Main> mainFrame = std::make_unique<glgui::frame::Main>(paramComponent.get(), methodComponent.get(), noiseComponent.get());
 
     std::unique_ptr<slam::lidar::Observer> observer = std::make_unique<slam::lidar::Observer>(noiseComponent->_scan_stddev);
+    std::unique_ptr<slam::scan_matching::Associator> associator = std::make_unique<slam::scan_matching::Associator>(0.1);
+    std::unique_ptr<slam::scan_matching::IterativeClosestPoints> icp = std::make_unique<slam::scan_matching::IterativeClosestPoints>(associator.get());
 
     int time_step = 0;
     std::vector<GLfloat> actual_trajectory; // 実際の軌跡
@@ -201,7 +195,10 @@ int main(int, char**)
     // 実際のロボットの位置
     glm::vec2 actual_location;
 
-    while (!glfwWindowShouldClose(window)) {
+    // 前回のスキャン
+    std::vector<glm::vec2> prev_scan;
+
+    while (!!glfwWindowShouldClose(window) == false) {
         glfwPollEvents();
         ImGui_ImplGlfwGL3_NewFrame();
 
@@ -212,11 +209,9 @@ int main(int, char**)
         glClear(GL_COLOR_BUFFER_BIT);
 
         unsigned int square_length = screen_width / 3.0;
-        fieldView->render(window, 0, 0, square_length, square_length);
 
         if (mainFrame->_is_slam_running) {
             if (is_first_scan) {
-                is_first_scan = false;
                 time_step = 0;
                 map.clear();
                 actual_trajectory.clear();
@@ -257,7 +252,7 @@ int main(int, char**)
                 if (noiseComponent->_odometry_stddev > 0) {
                     double prev_location_x = actual_trajectory[actual_trajectory.size() - 2];
                     double prev_location_y = actual_trajectory[actual_trajectory.size() - 1];
-                    if(time_step % 5 == 0){ // あまり高頻度で乗せるとリアルではなくなりそう
+                    if (time_step % 5 == 0) { // あまり高頻度で乗せるとリアルではなくなりそう
                         robot_rotation_noise = M_PI * slam::sampler::normal(0, noiseComponent->_odometry_stddev);
                     }
                     double transform_angle_rad = -(M_PI_2 - round_angle_rad) + robot_rotation_noise;
@@ -291,6 +286,8 @@ int main(int, char**)
                 last_scan_robot_angle_rad = actual_robot_angle_rad;
 
                 // 地図構築
+                // スキャンマッチング
+                std::vector<glm::vec2> current_scan;
                 for (int n = 0; n < num_beams; n++) {
                     // 座標変換
                     glm::vec4& scan = scans[n];
@@ -307,12 +304,26 @@ int main(int, char**)
                         point.x = cos(angle_rad) * distance;
                         point.y = sin(angle_rad) * distance;
                     }
-                    map.emplace_back(point.x);
-                    map.emplace_back(point.y);
+                    // map.emplace_back(point.x);
+                    // map.emplace_back(point.y);
+                    current_scan.emplace_back(point);
+                }
+                if (is_first_scan == false) {
+                    if (methodComponent->_scan_matching_enabled) {
+                        
+                    } else {
+                        for (glm::vec2& point : current_scan) {
+                            map.emplace_back(point.x);
+                            map.emplace_back(point.y);
+                        }
+                    }
                 }
             }
 
             time_step++;
+            if (is_first_scan) {
+                is_first_scan = false;
+            }
         } else {
             is_first_scan = true;
             actual_location.x = moving_radius * cos(round_angle_rad);
@@ -321,6 +332,7 @@ int main(int, char**)
             last_scan_location.y = actual_location.y;
         }
 
+        fieldView->render(window, 0, 0, square_length, square_length);
         mapView->render(window, square_length * 2, 0, square_length, square_length, map);
         observerView->render(window, square_length, 0, square_length, square_length, last_scan_location, scans);
         if (methodComponent->_odometry_enabled) {

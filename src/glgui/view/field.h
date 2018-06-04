@@ -15,7 +15,6 @@ namespace view {
         GLuint* _vbo;
         slam::environment::Field* _field;
         Field(slam::environment::Field* field);
-        ~Field();
         virtual void render(GLFWwindow* window, int x, int y, int width, int height);
     };
 }

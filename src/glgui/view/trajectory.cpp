@@ -31,9 +31,6 @@ void main(){
         glGenVertexArrays(1, &_vao);
         glBindVertexArray(0);
     }
-    Trajectory::~Trajectory()
-    {
-    }
     void Trajectory::render(GLFWwindow* window, int x, int y, int width, int height, std::vector<GLfloat>& trajectory)
     {
         int window_width, window_height;

@@ -20,7 +20,6 @@ namespace view {
         GLuint _sampler_id;
         double _scale;
         Robot(double scale);
-        ~Robot();
         virtual void render(GLFWwindow* window, int x, int y, int width, int height, glm::vec2& location, double angle_rad);
     };
 }

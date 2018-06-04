@@ -10,9 +10,6 @@ namespace frame {
         _method = method;
         _is_slam_running = false;
     }
-    Main::~Main()
-    {
-    }
     void Main::render()
     {
         if (_is_slam_running) {

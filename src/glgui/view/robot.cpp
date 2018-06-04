@@ -86,9 +86,6 @@ void main(){
 
         glBindTexture(GL_TEXTURE_2D, 0);
     }
-    Robot::~Robot()
-    {
-    }
     void Robot::render(GLFWwindow* window, int x, int y, int width, int height, glm::vec2& location, double angle_rad)
     {
         glEnable(GL_BLEND);

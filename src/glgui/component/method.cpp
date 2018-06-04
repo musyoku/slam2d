@@ -8,13 +8,11 @@ namespace component {
         _odometry_enabled = false;
         _scan_matching_enabled = false;
     }
-    Method::~Method()
-    {
-    }
     void Method::render()
     {
         if (ImGui::CollapsingHeader("Method", ImGuiTreeNodeFlags_DefaultOpen)) {
             ImGui::Checkbox("Odometry", &_odometry_enabled);
+            ImGui::Checkbox("Scan Matching", &_scan_matching_enabled);
         }
     }
 }

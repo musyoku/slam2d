@@ -13,3 +13,4 @@
 #include <slam/environment/field.h>
 #include <slam/lidar/observer.h>
 #include <slam/math/sampler.h>
+#include <slam/scan_matching/icp.h>

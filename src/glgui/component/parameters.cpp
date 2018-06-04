@@ -9,9 +9,6 @@ namespace component {
         _speed = speed;
         _laser_scanner_interval = laser_scanner_interval;
     }
-    Parameters::~Parameters()
-    {
-    }
     void Parameters::render()
     {
         if (ImGui::CollapsingHeader("Parameter", ImGuiTreeNodeFlags_DefaultOpen)) {

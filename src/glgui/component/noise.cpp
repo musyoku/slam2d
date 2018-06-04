@@ -8,9 +8,6 @@ namespace component {
         _odometry_stddev = odometry_stddev;
         _scan_stddev = scan_stddev;
     }
-    Noise::~Noise()
-    {
-    }
     void Noise::render()
     {
         if (ImGui::CollapsingHeader("Noise", ImGuiTreeNodeFlags_DefaultOpen)) {

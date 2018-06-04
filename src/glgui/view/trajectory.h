@@ -15,7 +15,6 @@ namespace view {
         GLuint _vbo;
         glm::vec3 _color;
         Trajectory(glm::vec3 color);
-        ~Trajectory();
         virtual void render(GLFWwindow* window, int x, int y, int width, int height, std::vector<GLfloat>& trajectory);
     };
 }

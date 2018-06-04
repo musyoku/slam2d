@@ -12,7 +12,6 @@ namespace frame {
         component::Noise* _noise;
         component::Method* _method;
         Main(component::Parameters* parameters, component::Method* method, component::Noise* noise);
-        ~Main();
         void render();
     };
 }

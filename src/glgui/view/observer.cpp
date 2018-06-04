@@ -31,9 +31,6 @@ void main(){
         glGenVertexArrays(1, &_vao);
         glBindVertexArray(0);
     }
-    Observer::~Observer()
-    {
-    }
     void Observer::render(GLFWwindow* window, int x, int y, int width, int height, glm::vec2& location, std::vector<glm::vec4> scans)
     {
         int num_observation = scans.size();
