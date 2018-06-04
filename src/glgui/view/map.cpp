@@ -19,7 +19,7 @@ void main(void)
 #version 400
 out vec4 color;
 void main(){
-    color = vec4(107.0f / 255.0f, 194.0f / 255.0f, 238.0f / 255.0f, 1.0);
+    color = vec4(234.0f / 255.0f, 176.0f / 255.0f, 73.0f / 255.0f, 1.0);
 }
 )";
         _program = opengl::create_program(vertex_shader, fragment_shader);
@@ -32,14 +32,14 @@ void main(){
     Map::~Map()
     {
     }
-    void Map::render(GLFWwindow* window, int x, int y, int width, int height, std::vector<GLfloat>& observed_points, int num_observation)
+    void Map::render(GLFWwindow* window, int x, int y, int width, int height, std::vector<GLfloat>& observed_points)
     {
         int num_points = observed_points.size() / 2;
         int window_width, window_height;
         glfwGetWindowSize(window, &window_width, &window_height);
         glViewport(x, window_height - y - height, width, height);
         glUseProgram(_program);
-        glPointSize(1);
+        glPointSize(2);
         glBindVertexArray(_vao);
         glBindBuffer(GL_ARRAY_BUFFER, _vbo);
         glBufferData(GL_ARRAY_BUFFER, 2 * num_points * sizeof(GLfloat), observed_points.data(), GL_STATIC_DRAW);

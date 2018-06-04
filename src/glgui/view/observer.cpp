@@ -34,7 +34,7 @@ void main(){
     }
     void Observer::render(GLFWwindow* window, int x, int y, int width, int height, glm::vec2& location, std::vector<glm::vec4> scans)
     {
-        int num_observation = scans.size() / 2;
+        int num_observation = scans.size();
         int window_width, window_height;
         glfwGetWindowSize(window, &window_width, &window_height);
         glViewport(x, window_height - y - height, width, height);
@@ -50,7 +50,7 @@ void main(){
             }
             glBindVertexArray(_vao);
             glBindBuffer(GL_ARRAY_BUFFER, _vbo);
-            glBufferData(GL_ARRAY_BUFFER, num_observation * sizeof(GLfloat) * 4, buffer, GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, 4 * num_observation * sizeof(GLfloat), buffer, GL_STATIC_DRAW);
             glEnableVertexAttribArray(_attribute_position);
             glVertexAttribPointer(_attribute_position, 2, GL_FLOAT, GL_FALSE, 0, 0);
             glDrawArrays(GL_LINES, 0, num_observation * 2);

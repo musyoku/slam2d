@@ -15,7 +15,7 @@ namespace view {
         GLuint _vbo;
         Map();
         ~Map();
-        virtual void render(GLFWwindow* window, int x, int y, int width, int height, std::vector<GLfloat>& observed_points, int num_observation);
+        virtual void render(GLFWwindow* window, int x, int y, int width, int height, std::vector<GLfloat>& observed_points);
     };
 }
 }

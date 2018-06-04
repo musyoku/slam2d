@@ -116,6 +116,7 @@ int main(int, char**)
     std::unique_ptr<glgui::view::Field> fieldView = std::make_unique<glgui::view::Field>(field.get());
     std::unique_ptr<glgui::view::Observer> observerView = std::make_unique<glgui::view::Observer>();
     std::unique_ptr<glgui::view::Trajectory> trajectoryView = std::make_unique<glgui::view::Trajectory>();
+    std::unique_ptr<glgui::view::Map> mapView = std::make_unique<glgui::view::Map>();
 
     std::unique_ptr<glgui::header::Parameters> parameters = std::make_unique<glgui::header::Parameters>(50, 0.5, 10);
     std::unique_ptr<glgui::frame::Main> mainFrame = std::make_unique<glgui::frame::Main>(parameters.get());
@@ -138,8 +139,8 @@ int main(int, char**)
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        unsigned int squre_length = screen_width / 3.0;
-        fieldView->render(window, 0, 0, squre_length, squre_length);
+        unsigned int square_length = screen_width / 3.0;
+        fieldView->render(window, 0, 0, square_length, square_length);
 
         if (mainFrame->_is_slam_running) {
             int num_beams = parameters->_num_beams;
@@ -150,7 +151,6 @@ int main(int, char**)
             double moving_radius = 0.75f;
 
             // オドメトリによる位置予測
-            // 真値はlocation.xy
             if (trajectory.size() == 0) {
                 double initial_location_x = moving_radius * cos(round_angle_rad);
                 double initial_location_y = moving_radius * sin(round_angle_rad);
@@ -183,14 +183,27 @@ int main(int, char**)
                 for (int n = 0; n < num_beams; n++) {
                     scans[n] = { 0, 0, 0, 0 };
                 }
-                observer->observe(field.get(), location, round_angle_rad, num_beams, scans);
+                double robot_angle_rad = round_angle_rad - M_PI_2;
+                observer->observe(field.get(), location, robot_angle_rad, num_beams, scans);
                 last_scan_location.x = location.x;
                 last_scan_location.y = location.y;
                 // 地図構築
+                for (int n = 0; n < num_beams; n++) {
+                    // 座標変換
+                    glm::vec4& scan = scans[n];
+                    double distance = scan[2];
+                    double angle_rad = scan[3];
+                    glm::vec2 point;
+                    point.x = cos(angle_rad) * distance + location.x;
+                    point.y = sin(angle_rad) * distance + location.y;
+                    map.emplace_back(point.x);
+                    map.emplace_back(point.y);
+                }
             }
 
-            observerView->render(window, squre_length, 0, squre_length, squre_length, last_scan_location, scans);
-            trajectoryView->render(window, squre_length * 2, 0, squre_length, squre_length, trajectory);
+            mapView->render(window, square_length * 2, 0, square_length, square_length, map);
+            observerView->render(window, square_length, 0, square_length, square_length, last_scan_location, scans);
+            trajectoryView->render(window, square_length * 2, 0, square_length, square_length, trajectory);
             time_step++;
         }
 
