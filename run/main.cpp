@@ -139,7 +139,18 @@ int main(int, char**)
     double round_angle_rad = M_PI_2;
     double robot_rotation_noise = 0;
     glm::vec2 last_scan_location;
+    double last_scan_robot_angle_rad;
     bool is_first_scan = false;
+
+    // ロボットが環境内を回転移動するときの1ステップの角度
+    double round_base_angle_rad = M_PI / 100.0f * paramComponent->_speed;
+    // ロボットが回転移動するときの半径
+    double moving_radius = 0.75f;
+
+    // ロボット自身が予測したロボットの現在位置
+    glm::vec2 estimated_location;
+    // 実際のロボットの位置
+    glm::vec2 actual_location;
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -168,14 +179,7 @@ int main(int, char**)
             int num_beams = paramComponent->_num_beams;
             double cursor_x, cursor_y;
             glfwGetCursorPos(window, &cursor_x, &cursor_y);
-            double round_base_angle_rad = M_PI / 100.0f * paramComponent->_speed;
             round_angle_rad -= round_base_angle_rad;
-            double moving_radius = 0.75f;
-
-            // ロボット地震が予測したロボットの現在位置
-            glm::vec2 estimated_location;
-            // 実際のロボットの位置
-            glm::vec2 actual_location;
 
             // オドメトリによる位置予測
             if (actual_trajectory.size() == 0) {
@@ -232,6 +236,7 @@ int main(int, char**)
                 observer->observe(field.get(), actual_location, robot_angle_rad, num_beams, scans);
                 last_scan_location.x = actual_location.x;
                 last_scan_location.y = actual_location.y;
+                last_scan_robot_angle_rad = robot_angle_rad;
 
                 // 地図構築
                 for (int n = 0; n < num_beams; n++) {
@@ -258,6 +263,10 @@ int main(int, char**)
             time_step++;
         } else {
             is_first_scan = true;
+            actual_location.x = moving_radius * cos(round_angle_rad);
+            actual_location.y = moving_radius * sin(round_angle_rad);
+            last_scan_location.x = actual_location.x;
+            last_scan_location.y = actual_location.y;
         }
 
         mapView->render(window, square_length * 2, 0, square_length, square_length, map);
@@ -266,7 +275,11 @@ int main(int, char**)
             estimatedTrajectoryView->render(window, square_length * 2, 0, square_length, square_length, estimated_trajectory);
             actualTrajectoryView->render(window, square_length * 2, 0, square_length, square_length, actual_trajectory);
         }
-        robotView->render(window, 0, 0, square_length, square_length, last_scan_location, 0);
+
+        double robot_angle_rad = round_angle_rad - M_PI_2 + robot_rotation_noise;
+        robotView->render(window, 0, 0, square_length, square_length, actual_location, robot_angle_rad);
+        robotView->render(window, square_length, 0, square_length, square_length, last_scan_location, last_scan_robot_angle_rad);
+
         mainFrame->render();
 
         glViewport(0, 0, screen_width, screen_height);

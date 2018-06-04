@@ -1,5 +1,5 @@
-#include "../core/opengl.h"
 #include "robot.h"
+#include "../core/opengl.h"
 
 namespace glgui {
 namespace view {
@@ -113,8 +113,12 @@ void main(){
             { 1.0, 1.0 }
         };
         for (int n = 0; n < 4; n++) {
-            position[n][0] = position[n][0] * _scale + location.x;
-            position[n][1] = position[n][1] * _scale + location.y;
+            // 回転
+            double new_x = position[n][0] * cos(angle_rad) - position[n][1] * sin(angle_rad);
+            double new_y = position[n][0] * sin(angle_rad) + position[n][1] * cos(angle_rad);
+            // 縮小・移動
+            position[n][0] = new_x * _scale + location.x;
+            position[n][1] = new_y * _scale + location.y;
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, _vbo_position);
