@@ -6,7 +6,10 @@ namespace header {
     public:
         int _num_beams;
         float _speed;
-        Parameters(int num_beams, float speed);
+        //オドメトリに対するレーザースキャナーの観測頻度
+        //10にするとオドメトリによる位置予測を10回行うたびにレーザースキャンが1回走る
+        int _laser_scanner_interval;  
+        Parameters(int num_beams, float speed, int laser_scanner_interval);
         ~Parameters();
         void render();
     };

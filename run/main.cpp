@@ -117,13 +117,15 @@ int main(int, char**)
     std::unique_ptr<glgui::view::Observer> observerView = std::make_unique<glgui::view::Observer>();
     std::unique_ptr<glgui::view::Trajectory> trajectoryView = std::make_unique<glgui::view::Trajectory>();
 
-    std::unique_ptr<glgui::header::Parameters> parameters = std::make_unique<glgui::header::Parameters>(50, 0.5);
+    std::unique_ptr<glgui::header::Parameters> parameters = std::make_unique<glgui::header::Parameters>(50, 0.5, 10);
     std::unique_ptr<glgui::frame::Main> mainFrame = std::make_unique<glgui::frame::Main>(parameters.get());
 
     int time_step = 0;
-    std::vector<GLfloat> trajectory;    // オドメトリによる軌跡
-    std::vector<GLfloat> map;           // 生成された地図
-    std::vector<glm::vec4> observed_values;     // レーザースキャナから得られた値
+    std::vector<GLfloat> trajectory; // オドメトリによる軌跡
+    std::vector<GLfloat> map; // 生成された地図
+    std::vector<glm::vec4> observed_values; // レーザースキャナから得られた値
+
+    glm::vec2 last_scan_location;
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -167,19 +169,26 @@ int main(int, char**)
                 trajectory.emplace_back(next_location_y);
             }
 
+            // ロボットの移動
             glm::vec2 location;
             location.x = trajectory[trajectory.size() - 2];
             location.y = trajectory[trajectory.size() - 1];
 
-            if(observed_values.size() != parameters->_num_beams){
-                observed_values.resize(parameters->_num_beams);
+            // レーザースキャナによる観測
+            if (time_step % parameters->_laser_scanner_interval == 0) {
+                if (observed_values.size() != parameters->_num_beams) {
+                    observed_values.resize(parameters->_num_beams);
+                }
+                for (int n = 0; n < num_beams; n++) {
+                    observed_values[n] = { 0, 0, 0, 0 };
+                }
+                observer->observe(field.get(), location, round_angle_rad, num_beams, observed_values);
+                last_scan_location.x = location.x;
+                last_scan_location.y = location.y;
+                // 地図構築
             }
-            for (int n = 0; n < num_beams; n++) {
-                observed_values[n] = { 0, 0, 0, 0 };
-            }
-            observer->observe(field.get(), location, round_angle_rad, num_beams, observed_values);
 
-            observerView->render(window, squre_length, 0, squre_length, squre_length, location, observed_values);
+            observerView->render(window, squre_length, 0, squre_length, squre_length, last_scan_location, observed_values);
             trajectoryView->render(window, squre_length * 2, 0, squre_length, squre_length, trajectory);
             time_step++;
         }
