@@ -47,34 +47,83 @@ void build_field(slam::environment::Field* field)
 
     {
         std::vector<glm::vec2> wall;
-        wall.emplace_back(-0.2, -0.3);
-        wall.emplace_back(-0.2, -0.3 + wall_thickness);
-        wall.emplace_back(0.3, -0.3);
-        wall.emplace_back(0.3, -0.3 + wall_thickness);
+        wall.emplace_back(-0.2, 0.1);
+        wall.emplace_back(-0.2, -0.1);
+        wall.emplace_back(0.1, 0.1);
+        wall.emplace_back(0.1, -0.1);
         field->add_wall(wall);
     }
     {
         std::vector<glm::vec2> wall;
-        wall.emplace_back(-0.4 + wall_thickness, -0.3);
-        wall.emplace_back(-0.4, -0.3);
-        wall.emplace_back(-0.3 + wall_thickness, 0.3);
-        wall.emplace_back(-0.3, 0.3);
+        wall.emplace_back(-0.2, 0.2);
+        wall.emplace_back(-0.2, -0.1);
+        wall.emplace_back(-0.1, 0.2);
+        wall.emplace_back(-0.1, -0.1);
         field->add_wall(wall);
     }
     {
         std::vector<glm::vec2> wall;
-        wall.emplace_back(-0.3, 0.3 - wall_thickness);
-        wall.emplace_back(-0.3, 0.3);
-        wall.emplace_back(0.4, 0.3 - wall_thickness);
-        wall.emplace_back(0.4, 0.3);
+        wall.emplace_back(-0.1, 0);
+        wall.emplace_back(-0.1, -0.2);
+        wall.emplace_back(0.1, 0);
+        wall.emplace_back(0.1, -0.2);
         field->add_wall(wall);
     }
     {
         std::vector<glm::vec2> wall;
-        wall.emplace_back(0.3, -0.3);
-        wall.emplace_back(0.3 - wall_thickness, -0.3);
-        wall.emplace_back(0.3, 0.3);
-        wall.emplace_back(0.3 - wall_thickness, 0.3);
+        wall.emplace_back(0, 0.1);
+        wall.emplace_back(0.3, 0.1);
+        wall.emplace_back(0, -0.1);
+        wall.emplace_back(0.3, -0.1);
+        field->add_wall(wall);
+    }
+    {
+        std::vector<glm::vec2> wall;
+        wall.emplace_back(0, 0.3);
+        wall.emplace_back(0.2, 0.3);
+        wall.emplace_back(0, 0);
+        wall.emplace_back(0.2, 0);
+        field->add_wall(wall);
+    }
+
+    {
+        std::vector<glm::vec2> wall;
+        wall.emplace_back(-1, -0.9);
+        wall.emplace_back(0.3, -0.9);
+        wall.emplace_back(-1, -1);
+        wall.emplace_back(0.3, -1);
+        field->add_wall(wall);
+    }
+    {
+        std::vector<glm::vec2> wall;
+        wall.emplace_back(-1, -0.8);
+        wall.emplace_back(-0.3, -0.8);
+        wall.emplace_back(-1, -1);
+        wall.emplace_back(-0.3, -1);
+        field->add_wall(wall);
+    }
+    {
+        std::vector<glm::vec2> wall;
+        wall.emplace_back(-0.1, 1);
+        wall.emplace_back(0.5, 1);
+        wall.emplace_back(-0.1, 0.9);
+        wall.emplace_back(0.5, 0.9);
+        field->add_wall(wall);
+    }
+    {
+        std::vector<glm::vec2> wall;
+        wall.emplace_back(-1, 1);
+        wall.emplace_back(-0.7, 1);
+        wall.emplace_back(-1, 0.7);
+        wall.emplace_back(-0.7, 0.7);
+        field->add_wall(wall);
+    }
+    {
+        std::vector<glm::vec2> wall;
+        wall.emplace_back(1, -1);
+        wall.emplace_back(0.7, -1);
+        wall.emplace_back(1, -0.7);
+        wall.emplace_back(0.7, -0.7);
         field->add_wall(wall);
     }
 }
@@ -145,7 +194,7 @@ int main(int, char**)
     // ロボットが環境内を回転移動するときの1ステップの角度
     double round_base_angle_rad = M_PI / 100.0f * paramComponent->_speed;
     // ロボットが回転移動するときの半径
-    double moving_radius = 0.75f;
+    double moving_radius = 0.65f;
 
     // ロボット自身が予測したロボットの現在位置
     glm::vec2 estimated_location;
@@ -208,7 +257,9 @@ int main(int, char**)
                 if (noiseComponent->_odometry_stddev > 0) {
                     double prev_location_x = actual_trajectory[actual_trajectory.size() - 2];
                     double prev_location_y = actual_trajectory[actual_trajectory.size() - 1];
-                    robot_rotation_noise = M_PI * slam::sampler::normal(0, noiseComponent->_odometry_stddev);
+                    if(time_step % 5 == 0){ // あまり高頻度で乗せるとリアルではなくなりそう
+                        robot_rotation_noise = M_PI * slam::sampler::normal(0, noiseComponent->_odometry_stddev);
+                    }
                     double transform_angle_rad = -(M_PI_2 - round_angle_rad) + robot_rotation_noise;
                     actual_location.x = cos(transform_angle_rad) * delta_moving_distance_x - sin(transform_angle_rad) * delta_moving_distance_y + prev_location_x;
                     actual_location.y = sin(transform_angle_rad) * delta_moving_distance_x + cos(transform_angle_rad) * delta_moving_distance_y + prev_location_y;
@@ -231,12 +282,13 @@ int main(int, char**)
                 for (int n = 0; n < num_beams; n++) {
                     scans[n] = glm::vec4(0, 0, 0, 0);
                 }
-                double robot_angle_rad = round_angle_rad - M_PI_2 + robot_rotation_noise;
+                double estimated_robot_angle_rad = round_angle_rad - M_PI_2;
+                double actual_robot_angle_rad = estimated_robot_angle_rad + robot_rotation_noise;
 
-                observer->observe(field.get(), actual_location, robot_angle_rad, num_beams, scans);
+                observer->observe(field.get(), actual_location, actual_robot_angle_rad, num_beams, scans);
                 last_scan_location.x = actual_location.x;
                 last_scan_location.y = actual_location.y;
-                last_scan_robot_angle_rad = robot_angle_rad;
+                last_scan_robot_angle_rad = actual_robot_angle_rad;
 
                 // 地図構築
                 for (int n = 0; n < num_beams; n++) {
@@ -247,7 +299,7 @@ int main(int, char**)
                     glm::vec2 point;
                     if (methodComponent->_odometry_enabled) {
                         // 座標系を変換
-                        angle_rad += robot_angle_rad;
+                        angle_rad += estimated_robot_angle_rad;
                         // ロボットはノイズの影響がわからないので予測位置を使う
                         point.x = cos(angle_rad) * distance + estimated_location.x;
                         point.y = sin(angle_rad) * distance + estimated_location.y;
