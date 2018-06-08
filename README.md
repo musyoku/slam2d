@@ -1,5 +1,5 @@
 ```
-brew install glfw
+brew install glfw pkg-config
 ```
 
 ```
