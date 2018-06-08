@@ -29,4 +29,4 @@ SOURCES = 	../src/external/gl3w/*.c \
 			../src/external/imgui/*.cpp \
 
 glgui: 
-	$(CXX) $(INCLUDE) main.cpp $(SOURCES) $(LDFLAGS) -o slam2d -O3 -DNDEBUG -Wall -Wformat
+	$(CXX) -O3 -DNDEBUG -Wall -Wformat -std=c++17 $(INCLUDE) main.cpp $(SOURCES) $(LDFLAGS) -o slam2d
