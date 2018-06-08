@@ -15,7 +15,7 @@
 #CXX = clang++
 
 
-INCLUDE = -I../src `pkg-config --cflags glfw3`
+INCLUDE = -I../src -I../src/external `pkg-config --cflags glfw3`
 LDFLAGS = -lGL `pkg-config --static --libs glfw3`
 SOURCES = 	../src/external/gl3w/*.c \
 			../src/glgui/core/*.cpp \

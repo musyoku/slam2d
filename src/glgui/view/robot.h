@@ -1,8 +1,8 @@
 #pragma once
 #include "../core/view.h"
-#include <external/gl3w/gl3w.h>
+#include <gl3w/gl3w.h>
 #include <GLFW/glfw3.h>
-#include <external/glm/glm.hpp>
+#include <glm/glm.hpp>
 
 namespace glgui {
 namespace view {

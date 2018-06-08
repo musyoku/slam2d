@@ -1,5 +1,5 @@
 #include "main.h"
-#include <external/imgui/imgui.h>
+#include <imgui/imgui.h>
 
 namespace glgui {
 namespace frame {

@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include <external/glm/glm.hpp>
+#include <glm/glm.hpp>
 
 namespace slam {
 namespace environment {

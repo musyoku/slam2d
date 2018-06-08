@@ -1,6 +1,6 @@
 #include "field.h"
 #include "../core/opengl.h"
-#include <external/glm/glm.hpp>
+#include <glm/glm.hpp>
 #include <vector>
 
 namespace glgui {

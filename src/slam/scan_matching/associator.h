@@ -1,5 +1,5 @@
 #pragma once
-#include <external/glm/glm.hpp>
+#include <glm/glm.hpp>
 #include <tuple>
 #include <vector>
 
