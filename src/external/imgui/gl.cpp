@@ -42,12 +42,12 @@
 
 // GL3W/GLFW
 #include <external/gl3w/gl3w.h>    // This example is using gl3w to access OpenGL functions (because it is small). You may use glew/glad/glLoadGen/etc. whatever already works for you.
-#include <external/glfw/glfw3.h>
+#include <GLFW/glfw3.h>
 #ifdef _WIN32
 #undef APIENTRY
 #define GLFW_EXPOSE_NATIVE_WIN32
 #define GLFW_EXPOSE_NATIVE_WGL
-#include <external/glfw/glfw3native.h>
+#include <GLFW/glfw3native.h>
 #endif
 
 // GLFW data
