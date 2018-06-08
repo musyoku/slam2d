@@ -16,7 +16,7 @@
 
 
 INCLUDE = -I../src -I../src/external `pkg-config --cflags glfw3`
-LDFLAGS = -lGL `pkg-config --static --libs glfw3`
+LDFLAGS = `pkg-config --static --libs glfw3`
 SOURCES = 	../src/external/gl3w/*.c \
 			../src/glgui/core/*.cpp \
 			../src/glgui/view/*.cpp \
@@ -27,6 +27,14 @@ SOURCES = 	../src/external/gl3w/*.c \
 			../src/slam/math/*.cpp \
 			../src/slam/scan_matching/*.cpp \
 			../src/external/imgui/*.cpp \
+
+UNAME := $(shell uname -s)
+ifeq ($(UNAME), Linux)
+	LDFLAGS += -lGL
+endif
+ifeq ($(UNAME), Darwin)
+	LDFLAGS += -framework OpenGL
+endif
 
 glgui: 
 	$(CXX) -O3 -DNDEBUG -Wall -Wformat -std=c++17 $(INCLUDE) main.cpp $(SOURCES) $(LDFLAGS) -o slam2d
