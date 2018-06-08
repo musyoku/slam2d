@@ -19,11 +19,11 @@ void main(void)
 
         const GLchar fragment_shader[] = R"(
 #version 400
-uniform sampler2D texture;
+uniform sampler2D image;
 in vec2 coord;
 out vec4 color;
 void main(){
-    color = texture2D(texture, coord);
+    color = texture(image, coord);
 }
 )";
 
@@ -43,7 +43,7 @@ void main(){
 
         _position_location = glGetAttribLocation(_program, "position");
         _uv_location = glGetAttribLocation(_program, "uv");
-        _texture_location = glGetUniformLocation(_program, "texture");
+        _texture_location = glGetUniformLocation(_program, "image");
 
         glUniform1i(_texture_location, 0); // = use GL_TEXTURE0
 
